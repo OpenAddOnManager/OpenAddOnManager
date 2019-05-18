@@ -1,0 +1,15 @@
+[
+    {
+        "name": "Alamo Reeburth",
+        "description": "Alamo teechs ur frens 2 play DURID!",
+        "iconUrl": "https://raw.githubusercontent.com/BigBadBleuCheese/AlamoReeburth/master/alamobear.jpg",
+
+        "releaseChannelId": "_retail_",
+        "sourceUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth.git",
+
+        "authorName": "CodeBleu",
+        
+        "addOnPageUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth",
+        "supportUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth/issues"
+    }
+]
