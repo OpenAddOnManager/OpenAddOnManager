@@ -6,6 +6,7 @@
 
         "releaseChannelId": "_retail_",
         "sourceUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth.git",
+        "sourceBranch": "master",
 
         "authorName": "CodeBleu",
 
