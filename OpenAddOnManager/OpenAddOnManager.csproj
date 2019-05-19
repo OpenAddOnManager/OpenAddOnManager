@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Gear.ActiveExpressions" Version="1.0.49" />
+    <PackageReference Include="Gear.ActiveQuery" Version="1.0.16" />
+    <PackageReference Include="Gear.Components" Version="1.0.107" />
+    <PackageReference Include="LibGit2Sharp" Version="0.26.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+  </ItemGroup>
+
+</Project>
