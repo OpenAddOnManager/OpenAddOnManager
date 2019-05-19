@@ -99,7 +99,10 @@ namespace OpenAddOnManager
             {
                 if (repositoryDirectory.GetFileSystemInfos().Length == 0)
                 {
-                    Repository.Clone(sourceUrl.ToString(), repositoryDirectory.FullName);
+                    if (sourceBranch == null)
+                        Repository.Clone(sourceUrl.ToString(), repositoryDirectory.FullName);
+                    else
+                        Repository.Clone(sourceUrl.ToString(), repositoryDirectory.FullName, new CloneOptions { BranchName = sourceBranch });
                     return true;
                 }
                 else
