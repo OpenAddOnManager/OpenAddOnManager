@@ -9,14 +9,14 @@ namespace OpenAddOnManager.Tests
     public class AddOnManagerTests
     {
         [TestMethod]
-        public async Task AddOnManifestLoads()
+        public async Task AddOnManifestLoadsAsync()
         {
             using (var manager = await AddOnManager.StartAsync(null, null))
                 Assert.IsTrue(manager.AddOns.Count > 0);
         }
 
         [TestMethod]
-        public async Task AddOnStatesPersist()
+        public async Task AddOnStatesPersistAsync()
         {
             var alamoReeburthKey = Guid.Parse("945fad13-7ec7-4149-9541-3852bfad0673");
             var testStorageDirectory = GetTestStorageDirectory();
