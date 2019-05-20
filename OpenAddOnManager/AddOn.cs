@@ -166,7 +166,7 @@ namespace OpenAddOnManager
                 throw new WorldOfWarcraftInstallationClientUnavailableException(releaseChannelId);
             if (IsLicensed && !isLicenseAgreed)
                 throw new UserHasNotAgreedToLicenseException();
-            await UninstallAsync().ConfigureAwait(false);
+            await UninstallAsync(deleteSavedVariables: false).ConfigureAwait(false);
             var clientInterfaceDirectory = new DirectoryInfo(Path.Combine(client.Directory.FullName, "Interface"));
             if (!clientInterfaceDirectory.Exists)
                 clientInterfaceDirectory.Create();
