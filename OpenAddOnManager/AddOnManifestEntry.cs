@@ -20,6 +20,8 @@ namespace OpenAddOnManager
 
         public Uri IconUrl { get; set; }
 
+        public bool IsPrereleaseVersion { get; set; }
+
         public string Name { get; set; }
 
         public string ReleaseChannelId { get; set; }

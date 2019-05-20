@@ -4,9 +4,23 @@
         "description": "Alamo teechs ur frens 2 play DURID!",
         "iconUrl": "https://raw.githubusercontent.com/BigBadBleuCheese/AlamoReeburth/master/alamobear.jpg",
 
-        "releaseChannelId": "_retail_",
         "sourceUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth.git",
         "sourceBranch": "master",
+
+        "authorName": "CodeBleu",
+
+        "addOnPageUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth",
+        "supportUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth/issues"
+    },
+
+    "ddcfab72-11bf-4b0c-b702-8d28ac241346": {
+        "name": "Alamo Reeburth",
+        "description": "Alamo teechs ur frens 2 play DURID!",
+        "iconUrl": "https://raw.githubusercontent.com/BigBadBleuCheese/AlamoReeburth/test/alamobear.jpg",
+
+        "sourceUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth.git",
+        "sourceBranch": "test",
+        "isPrereleaseVersion":  true,
 
         "authorName": "CodeBleu",
 

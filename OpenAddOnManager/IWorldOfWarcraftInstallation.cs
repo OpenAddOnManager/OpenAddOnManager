@@ -5,7 +5,7 @@ namespace OpenAddOnManager
 {
     public interface IWorldOfWarcraftInstallation
     {
-        IReadOnlyList<IWorldOfWarcraftInstallationClient> Clients { get; }
+        IReadOnlyDictionary<string, IWorldOfWarcraftInstallationClient> Clients { get; }
         DirectoryInfo Directory { get; }
     }
 }

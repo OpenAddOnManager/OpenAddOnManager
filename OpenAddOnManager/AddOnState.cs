@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace OpenAddOnManager
 {
@@ -17,6 +18,16 @@ namespace OpenAddOnManager
         public Uri DonationsUrl { get; set; }
 
         public Uri IconUrl { get; set; }
+
+        public List<string> InstalledFiles { get; set; }
+
+        public string InstalledSha { get; set; }
+
+        public bool IsLicenseAgreed { get; set; }
+
+        public bool IsPrereleaseVersion { get; set; }
+
+        public string License { get; set; }
 
         public string Name { get; set; }
 

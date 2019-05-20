@@ -42,7 +42,7 @@ namespace OpenAddOnManager
         AddOnManager(DirectoryInfo storageDirectory, HttpClientHandler httpClientHandler, IWorldOfWarcraftInstallation worldOfWarcraftInstallation)
         {
             this.httpClientHandler = httpClientHandler;
-            this.worldOfWarcraftInstallation = worldOfWarcraftInstallation;
+            WorldOfWarcraftInstallation = worldOfWarcraftInstallation;
             AddOns = new ReadOnlyObservableRangeDictionary<Guid, AddOn>(addOns);
             ManifestUrls = new ReadOnlyObservableCollection<Uri>(manifestUrls);
             StorageDirectory = storageDirectory;
@@ -67,7 +67,6 @@ namespace OpenAddOnManager
         readonly ObservableCollection<Uri> manifestUrls = new ObservableCollection<Uri>(DefaultManifestUrls);
         readonly AsyncLock manifestUrlsAccess = new AsyncLock();
         Timer updateAvailableAddOnsTimer;
-        readonly IWorldOfWarcraftInstallation worldOfWarcraftInstallation;
 
         protected override void Dispose(bool disposing)
         {
@@ -108,7 +107,7 @@ namespace OpenAddOnManager
                             await responseJsonTextReader.ReadAsync().ConfigureAwait(false);
                             var entry = jsonSerializer.Deserialize<AddOnManifestEntry>(responseJsonTextReader);
                             if (addOns.TryGetValue(addOnsKey, out var addOn))
-                                addOn.UpdatePropertiesFromManifestEntry(entry);
+                                await addOn.UpdatePropertiesFromManifestEntryAsync(entry).ConfigureAwait(false);
                             else
                                 addOns.Add(addOnsKey, new AddOn(this, addOnsKey, entry));
                         }
@@ -117,12 +116,14 @@ namespace OpenAddOnManager
 
         async void UpdateAvailableAddOnsTimerCallback(object state) => await UpdateAvailableAddOnsAsync().ConfigureAwait(false);
 
-        public DirectoryInfo AddOnsDirectory { get; }
-
         public ReadOnlyObservableRangeDictionary<Guid, AddOn> AddOns { get; }
+
+        public DirectoryInfo AddOnsDirectory { get; }
 
         public ReadOnlyObservableCollection<Uri> ManifestUrls { get; }
 
         public DirectoryInfo StorageDirectory { get; }
+
+        public IWorldOfWarcraftInstallation WorldOfWarcraftInstallation { get; }
     }
 }

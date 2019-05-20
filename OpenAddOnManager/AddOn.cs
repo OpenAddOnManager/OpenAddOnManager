@@ -2,7 +2,10 @@ using Gear.Components;
 using LibGit2Sharp;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
@@ -37,11 +40,20 @@ namespace OpenAddOnManager
                 description = state.Description;
                 donationsUrl = state.DonationsUrl;
                 iconUrl = state.IconUrl;
+                isPrereleaseVersion = state.IsPrereleaseVersion;
+                license = state.License;
                 name = state.Name;
                 releaseChannelId = state.ReleaseChannelId;
                 sourceBranch = state.SourceBranch;
                 sourceUrl = state.SourceUrl;
                 supportUrl = state.SupportUrl;
+                var worldOfWarcraftInstallation = this.addOnManager.WorldOfWarcraftInstallation;
+                if (worldOfWarcraftInstallation != null && worldOfWarcraftInstallation.Clients.TryGetValue(releaseChannelId, out var client))
+                {
+                    var clientPath = client.Directory.FullName;
+                    installedFiles = state.InstalledFiles?.Select(installedFile => new FileInfo(Path.Combine(clientPath, installedFile))).ToImmutableArray();
+                    installedSha = state.InstalledSha;
+                }
             }
         }
 
@@ -54,6 +66,7 @@ namespace OpenAddOnManager
             description = addOnManifestEntry.Description;
             donationsUrl = addOnManifestEntry.DonationsUrl;
             iconUrl = addOnManifestEntry.IconUrl;
+            isPrereleaseVersion = addOnManifestEntry.IsPrereleaseVersion;
             name = addOnManifestEntry.Name;
             releaseChannelId = addOnManifestEntry.ReleaseChannelId;
             sourceBranch = addOnManifestEntry.SourceBranch;
@@ -70,6 +83,11 @@ namespace OpenAddOnManager
         string description;
         Uri donationsUrl;
         Uri iconUrl;
+        IReadOnlyList<FileInfo> installedFiles;
+        string installedSha;
+        bool isLicenseAgreed;
+        bool isPrereleaseVersion;
+        string license;
         string name;
         string releaseChannelId;
         readonly DirectoryInfo repositoryDirectory;
@@ -78,8 +96,13 @@ namespace OpenAddOnManager
         readonly FileInfo stateFile;
         Uri supportUrl;
 
-        public Task DeleteAsync() => Task.Run(() =>
+        public void AgreeToLicense()
         {
+        }
+
+        public Task<bool> DeleteAsync() => Task.Run(async () =>
+        {
+            await UninstallAsync().ConfigureAwait(false);
             repositoryDirectory.Refresh();
             if (repositoryDirectory.Exists)
             {
@@ -87,7 +110,9 @@ namespace OpenAddOnManager
                     fileSystemInfo.Attributes &= ~FileAttributes.ReadOnly;
                 repositoryDirectory.Delete(true);
                 OnPropertyChanged(nameof(IsDownloaded));
+                return true;
             }
+            return false;
         });
 
         public Task<bool> DownloadAsync() => Task.Run(async () =>
@@ -103,10 +128,15 @@ namespace OpenAddOnManager
                         Repository.Clone(sourceUrl.ToString(), repositoryDirectory.FullName);
                     else
                         Repository.Clone(sourceUrl.ToString(), repositoryDirectory.FullName, new CloneOptions { BranchName = sourceBranch });
+                    await LoadLicenseAsync().ConfigureAwait(false);
                     return true;
                 }
                 else
-                    return Commands.Pull(new Repository(repositoryDirectory.FullName), new Signature(SignatureName, SignatureEmail, DateTimeOffset.Now), new PullOptions { MergeOptions = new MergeOptions { FastForwardStrategy = FastForwardStrategy.FastForwardOnly } }).Status == MergeStatus.FastForward;
+                {
+                    var pullStatus = Commands.Pull(new Repository(repositoryDirectory.FullName), new Signature(SignatureName, SignatureEmail, DateTimeOffset.Now), new PullOptions { MergeOptions = new MergeOptions { FastForwardStrategy = FastForwardStrategy.FastForwardOnly } }).Status;
+                    await LoadLicenseAsync().ConfigureAwait(false);
+                    return pullStatus == MergeStatus.FastForward;
+                }
             }
             catch (Exception ex)
             {
@@ -119,6 +149,28 @@ namespace OpenAddOnManager
                 OnPropertyChanged(nameof(IsDownloaded));
             }
         });
+
+        public Task<bool> InstallAsync() => Task.Run(async () =>
+        {
+            var worldOfWacraftInstallation = addOnManager.WorldOfWarcraftInstallation;
+            if (worldOfWacraftInstallation == null || !worldOfWacraftInstallation.Clients.TryGetValue(releaseChannelId, out var client) || !IsLicenseAgreed)
+                return false;
+            await UninstallAsync().ConfigureAwait(false);
+            // TODO: do the work
+            return true;
+        });
+
+        async Task LoadLicenseAsync()
+        {
+            string license = null;
+            if (IsDownloaded)
+            {
+                var licenseFile = new FileInfo(Path.Combine(repositoryDirectory.FullName, "LICENSE"));
+                if (licenseFile.Exists)
+                    license = await File.ReadAllTextAsync(licenseFile.FullName).ConfigureAwait(false);
+            }
+            License = license;
+        }
 
         void SaveState()
         {
@@ -135,6 +187,10 @@ namespace OpenAddOnManager
                         Description = description,
                         DonationsUrl = donationsUrl,
                         IconUrl = iconUrl,
+                        InstalledFiles = installedFiles?.Select(installedFile => installedFile.FullName.Substring(addOnManager.WorldOfWarcraftInstallation.Clients[releaseChannelId].Directory.FullName.Length + 1)).ToList(),
+                        InstalledSha = installedSha,
+                        IsPrereleaseVersion = isPrereleaseVersion,
+                        License = license,
                         Name = name,
                         ReleaseChannelId = releaseChannelId,
                         SourceBranch = sourceBranch,
@@ -144,7 +200,15 @@ namespace OpenAddOnManager
                 }
         }
 
-        internal void UpdatePropertiesFromManifestEntry(AddOnManifestEntry addOnManifestEntry)
+        public Task<bool> UninstallAsync() => Task.Run(() =>
+        {
+            if (!IsInstalled)
+                return false;
+            // TODO: do the work
+            return true;
+        });
+
+        internal async Task UpdatePropertiesFromManifestEntryAsync(AddOnManifestEntry addOnManifestEntry)
         {
             AddOnPageUrl = addOnManifestEntry.AddOnPageUrl;
             AuthorEmail = addOnManifestEntry.AuthorEmail;
@@ -153,11 +217,22 @@ namespace OpenAddOnManager
             Description = addOnManifestEntry.Description;
             DonationsUrl = addOnManifestEntry.DonationsUrl;
             IconUrl = addOnManifestEntry.IconUrl;
+            IsPrereleaseVersion = addOnManifestEntry.IsPrereleaseVersion;
             Name = addOnManifestEntry.Name;
-            ReleaseChannelId = addOnManifestEntry.ReleaseChannelId;
-            SourceBranch = addOnManifestEntry.SourceBranch;
-            SourceUrl = addOnManifestEntry.SourceUrl;
             SupportUrl = addOnManifestEntry.SupportUrl;
+
+            if (releaseChannelId != addOnManifestEntry.ReleaseChannelId || sourceBranch != addOnManifestEntry.SourceBranch || sourceUrl != addOnManifestEntry.SourceUrl)
+            {
+                var wasInstalled = await UninstallAsync().ConfigureAwait(false);
+                var wasDownloaded = await DeleteAsync().ConfigureAwait(false);
+                ReleaseChannelId = addOnManifestEntry.ReleaseChannelId;
+                SourceBranch = addOnManifestEntry.SourceBranch;
+                SourceUrl = addOnManifestEntry.SourceUrl;
+                if (wasDownloaded)
+                    await DownloadAsync().ConfigureAwait(false);
+                if (wasInstalled)
+                    await InstallAsync().ConfigureAwait(false);
+            }
         }
 
         public Uri AddOnPageUrl
@@ -211,7 +286,27 @@ namespace OpenAddOnManager
             }
         }
 
+        public bool IsInstalled => installedFiles != null;
+
+        public bool IsLicenseAgreed
+        {
+            get => isLicenseAgreed;
+            private set => SetBackedProperty(ref isLicenseAgreed, in value);
+        }
+
+        public bool IsPrereleaseVersion
+        {
+            get => isPrereleaseVersion;
+            private set => SetBackedProperty(ref isPrereleaseVersion, in value);
+        }
+
         public Guid Key { get; }
+
+        public string License
+        {
+            get => license;
+            private set => SetBackedProperty(ref license, in value);
+        }
 
         public string Name
         {

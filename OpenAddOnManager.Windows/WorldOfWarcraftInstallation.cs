@@ -1,8 +1,9 @@
 using Gear.ActiveQuery;
 using Gear.Components;
 using Nito.AsyncEx;
+using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -16,7 +17,7 @@ namespace OpenAddOnManager.Windows
         {
             var installation = new WorldOfWarcraftInstallation { Directory = directory };
             if (synchronizationContext != null)
-                installation.ClientsForBinding = installation.clients.SwitchContext(synchronizationContext);
+                installation.ClientsForBinding = installation.clientsForBinding.SwitchContext(synchronizationContext);
             await installation.AddClientsAsync().ConfigureAwait(false);
             installation.InitializeFileSystemWatcher();
             return installation;
@@ -24,30 +25,23 @@ namespace OpenAddOnManager.Windows
 
         WorldOfWarcraftInstallation()
         {
-            clients = new ObservableCollection<IWorldOfWarcraftInstallationClient>();
-            Clients = new ReadOnlyObservableCollection<IWorldOfWarcraftInstallationClient>(clients);
+            clients = new ObservableDictionary<string, IWorldOfWarcraftInstallationClient>(StringComparer.OrdinalIgnoreCase);
+            Clients = new ReadOnlyObservableRangeDictionary<string, IWorldOfWarcraftInstallationClient>(clients);
+            clientsForBinding = clients.ToActiveEnumerable();
         }
 
-        readonly ObservableCollection<IWorldOfWarcraftInstallationClient> clients;
+        readonly ObservableDictionary<string, IWorldOfWarcraftInstallationClient> clients;
         readonly AsyncLock clientsAccess = new AsyncLock();
+        readonly IActiveEnumerable<IWorldOfWarcraftInstallationClient> clientsForBinding;
         FileSystemWatcher fileSystemWatcher;
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ClientsForBinding?.Dispose();
-                fileSystemWatcher?.Dispose();
-            }
-        }
 
         Task AddClientsAsync() => Task.Run(async () =>
         {
-            foreach (var subDirectory in Directory.GetDirectories().Where(subDirectory => subDirectory.Name.StartsWith("_") && !clients.Any(client => client.Directory == subDirectory)))
+            foreach (var subDirectory in Directory.GetDirectories().Where(subDirectory => subDirectory.Name.StartsWith("_") && subDirectory.Name.EndsWith("_") && !clients.ContainsKey(subDirectory.Name)))
             {
                 try
                 {
-                    clients.Add(await WorldOfWarcraftInstallationClient.CreateAsync(this, subDirectory).ConfigureAwait(false));
+                    clients.Add(subDirectory.Name, await WorldOfWarcraftInstallationClient.CreateAsync(this, subDirectory).ConfigureAwait(false));
                 }
                 catch
                 {
@@ -55,6 +49,16 @@ namespace OpenAddOnManager.Windows
                 }
             }
         });
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ClientsForBinding?.Dispose();
+                clientsForBinding?.Dispose();
+                fileSystemWatcher?.Dispose();
+            }
+        }
 
         void FileSystemWatcherErrorHandler(object sender, ErrorEventArgs e)
         {
@@ -67,18 +71,16 @@ namespace OpenAddOnManager.Windows
         {
             using (await clientsAccess.LockAsync().ConfigureAwait(false))
             {
-                for (var i = 0; i < clients.Count;)
+                foreach (var clientKey in clients.Keys.ToImmutableArray())
                 {
-                    var client = clients[i];
+                    var client = clients[clientKey];
                     var clientDirectory = client.Directory;
                     clientDirectory.Refresh();
                     if (!clientDirectory.Exists)
                     {
-                        clients.RemoveAt(i);
+                        clients.Remove(clientKey);
                         client.Dispose();
                     }
-                    else
-                        ++i;
                 }
                 await AddClientsAsync().ConfigureAwait(false);
             }
@@ -97,7 +99,7 @@ namespace OpenAddOnManager.Windows
             fileSystemWatcher.EnableRaisingEvents = true;
         }
 
-        public IReadOnlyList<IWorldOfWarcraftInstallationClient> Clients { get; private set; }
+        public IReadOnlyDictionary<string, IWorldOfWarcraftInstallationClient> Clients { get; private set; }
 
         public IActiveEnumerable<IWorldOfWarcraftInstallationClient> ClientsForBinding { get; private set; }
 
