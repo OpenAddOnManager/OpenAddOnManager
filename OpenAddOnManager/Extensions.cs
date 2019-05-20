@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -10,10 +11,10 @@ namespace OpenAddOnManager
     {
         static readonly Regex wtfConfigSetVariablePattern = new Regex("^SET (?<name>[^ ]*) \\\"(?<value>.*)\\\"$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        public static IReadOnlyList<FileInfo> CopyContentsTo(this DirectoryInfo sourceDirectory, DirectoryInfo targetDirectory, bool overwrite = false)
+        public static IReadOnlyList<FileInfo> CopyContentsTo(this DirectoryInfo sourceDirectory, DirectoryInfo targetDirectory, bool overwrite = false, IReadOnlyList<Regex> excludeDirectoryPatterns = null)
         {
             var copiedFiles = new List<FileInfo>();
-            foreach (var sourceSubDirectory in sourceDirectory.GetDirectories())
+            foreach (var sourceSubDirectory in sourceDirectory.GetDirectories().Where(sourceSubDirectory => !(excludeDirectoryPatterns?.Any(excludeDirectoryPattern => excludeDirectoryPattern.IsMatch(sourceSubDirectory.FullName)) ?? false)))
             {
                 var targetSubDirectory = new DirectoryInfo(Path.Combine(targetDirectory.FullName, sourceSubDirectory.Name));
                 if (!targetSubDirectory.Exists)

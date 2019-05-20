@@ -8,12 +8,15 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OpenAddOnManager
 {
     public class AddOn : PropertyChangeNotifier
     {
+        static Regex[] installationExcludedDirectoryPatterns = new Regex[] { new Regex("^\\.git$", RegexOptions.Compiled) };
+
         public static string SignatureEmail { get; } = "no-one@no-where.com";
 
         public static string SignatureName { get; } = "Open Add-On Manager";
@@ -193,9 +196,14 @@ namespace OpenAddOnManager
                 }
             var savedVariablesAddOnNames = new List<string>();
             var savedVariablesPerCharacterAddOnNames = new List<string>();
-            foreach (var addOnDirectory in addOnsDirectory.GetDirectories())
+
+            async Task installAddOnAsync(DirectoryInfo addOnDirectory)
             {
-                var tocFile = addOnDirectory.GetFiles($"{addOnDirectory.Name}.toc").FirstOrDefault();
+                FileInfo tocFile;
+                if (addOnDirectory == repositoryDirectory)
+                    tocFile = addOnDirectory.GetFiles($"*.toc").FirstOrDefault();
+                else
+                    tocFile = addOnDirectory.GetFiles($"{addOnDirectory.Name}.toc").FirstOrDefault();
                 if (tocFile != default)
                 {
                     var toc = await AddOnTableOfContents.LoadFromAsync(tocFile).ConfigureAwait(false);
@@ -203,12 +211,18 @@ namespace OpenAddOnManager
                         savedVariablesAddOnNames.Add(addOnDirectory.Name);
                     if (toc.SavedVariablesPerCharacter?.Any() ?? false)
                         savedVariablesPerCharacterAddOnNames.Add(addOnDirectory.Name);
-                    var clientAddOnDirectory = new DirectoryInfo(Path.Combine(clientAddOnsDirectory.FullName, addOnDirectory.Name));
+                    var clientAddOnDirectory = new DirectoryInfo(Path.Combine(clientAddOnsDirectory.FullName, tocFile.Name));
                     if (!clientAddOnDirectory.Exists)
                         clientAddOnDirectory.Create();
-                    installedFiles.AddRange(addOnDirectory.CopyContentsTo(clientAddOnDirectory, true));
+                    installedFiles.AddRange(addOnDirectory.CopyContentsTo(clientAddOnDirectory, overwrite: true, excludeDirectoryPatterns: installationExcludedDirectoryPatterns));
                 }
             }
+
+            if (addOnsDirectory == repositoryDirectory.Parent)
+                await installAddOnAsync(repositoryDirectory).ConfigureAwait(false);
+            else
+                foreach (var addOnDirectory in addOnsDirectory.GetDirectories())
+                    await installAddOnAsync(addOnDirectory).ConfigureAwait(false);
             installedSha = new Repository(repositoryDirectory.FullName).Head.Tip.Sha;
             this.installedFiles = installedFiles.ToImmutableArray();
             this.savedVariablesAddOnNames = savedVariablesAddOnNames.ToImmutableArray();
@@ -232,7 +246,6 @@ namespace OpenAddOnManager
             if (stateFile != null)
                 using (var streamWriter = File.CreateText(stateFile.FullName))
                 using (var jsonWriter = new JsonTextWriter(streamWriter))
-                {
                     JsonSerializer.CreateDefault().Serialize(jsonWriter, new AddOnState
                     {
                         AddOnPageUrl = addOnPageUrl,
@@ -254,7 +267,6 @@ namespace OpenAddOnManager
                         SourceUrl = sourceUrl,
                         SupportUrl = supportUrl
                     });
-                }
         }
 
         public Task<bool> UninstallAsync(bool deleteSavedVariables = true) => Task.Run(() =>
@@ -295,7 +307,6 @@ namespace OpenAddOnManager
                 {
                     var accountsDirectory = new DirectoryInfo(Path.Combine(wtfDirectory.FullName, "Account"));
                     if (accountsDirectory.Exists)
-                    {
                         foreach (var accountDirectory in accountsDirectory.GetDirectories())
                         {
                             var accountSavedVariablesDirectory = new DirectoryInfo(Path.Combine(accountDirectory.FullName, "SavedVariables"));
@@ -314,7 +325,6 @@ namespace OpenAddOnManager
                                                     savedVariablesFile.Delete();
                                     }
                         }
-                    }
                 }
             }
             savedVariablesAddOnNames = null;
