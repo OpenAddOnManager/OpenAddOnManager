@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -7,6 +9,21 @@ namespace OpenAddOnManager
     public static class Extensions
     {
         static readonly Regex wtfConfigSetVariablePattern = new Regex("^SET (?<name>[^ ]*) \\\"(?<value>.*)\\\"$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        public static IReadOnlyList<FileInfo> CopyContentsTo(this DirectoryInfo sourceDirectory, DirectoryInfo targetDirectory, bool overwrite = false)
+        {
+            var copiedFiles = new List<FileInfo>();
+            foreach (var sourceSubDirectory in sourceDirectory.GetDirectories())
+            {
+                var targetSubDirectory = new DirectoryInfo(Path.Combine(targetDirectory.FullName, sourceSubDirectory.Name));
+                if (!targetSubDirectory.Exists)
+                    targetSubDirectory.Create();
+                copiedFiles.AddRange(CopyContentsTo(sourceSubDirectory, targetSubDirectory, overwrite));
+            }
+            foreach (var sourceFile in sourceDirectory.GetFiles())
+                copiedFiles.Add(sourceFile.CopyTo(Path.Combine(targetDirectory.FullName, sourceFile.Name), overwrite));
+            return copiedFiles.ToImmutableArray();
+        }
 
         public static async Task<string> GetInterfaceVersionAsync(this IWorldOfWarcraftInstallationClient worldOfWarcraftInstallationClient)
         {

@@ -33,6 +33,10 @@ namespace OpenAddOnManager
 
         public string ReleaseChannelId { get; set; }
 
+        public List<string> SavedVariablesAddOnNames { get; set; }
+
+        public List<string> SavedVariablesPerCharacterAddOnNames { get; set; }
+
         public string SourceBranch { get; set; }
 
         public Uri SourceUrl { get; set; }

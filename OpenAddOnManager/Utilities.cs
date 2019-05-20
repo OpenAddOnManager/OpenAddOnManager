@@ -17,5 +17,19 @@ namespace OpenAddOnManager
 
         public static string GetReleaseChannelNameFromId(string releaseChannelIdentifier) =>
             string.Join(" ", releaseChannelIdentifier[1..^1].Split('_').Select(word => $"{char.ToUpperInvariant(word[0])}{word.Substring(1)}"));
+
+        public static int GetStepsUpFromDirectory(FileInfo file, DirectoryInfo directory)
+        {
+            var traversingDirectory = file.Directory;
+            var steps = 0;
+            while (traversingDirectory != directory)
+            {
+                traversingDirectory = traversingDirectory.Parent;
+                if (traversingDirectory == null)
+                    return -1;
+                ++steps;
+            }
+            return steps;
+        }
     }
 }
