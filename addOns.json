@@ -1,30 +1,91 @@
 {
     "945fad13-7ec7-4149-9541-3852bfad0673": {
-        "name": "Alamo Reeburth",
-        "description": "Alamo teechs ur frens 2 play DURID!",
-        "iconUrl": "https://raw.githubusercontent.com/BigBadBleuCheese/AlamoReeburth/master/alamobear.jpg",
+        "name": "Blank Add-On",
+        "description": "This is a World of Warcraft add-on that does absolutely nothing. It's used to test Open Add-On Manager.",
+        "iconUrl": "https://raw.githubusercontent.com/OpenAddOnManager/OpenAddOnManager/master/icon.png",
 
-        "sourceUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth.git",
-        "sourceBranch": "master",
+        "sourceUrl": "https://github.com/OpenAddOnManager/BlankAddOn.git",
 
         "authorName": "CodeBleu",
 
-        "addOnPageUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth",
-        "supportUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth/issues"
+        "addOnPageUrl": "https://github.com/OpenAddOnManager/BlankAddOn",
+        "supportUrl": "https://github.com/OpenAddOnManager/BlankAddOn/issues"
     },
 
     "ddcfab72-11bf-4b0c-b702-8d28ac241346": {
-        "name": "Alamo Reeburth",
-        "description": "Alamo teechs ur frens 2 play DURID!",
-        "iconUrl": "https://raw.githubusercontent.com/BigBadBleuCheese/AlamoReeburth/test/alamobear.jpg",
+        "name": "Blank Add-On",
+        "description": "This is a World of Warcraft add-on that does absolutely nothing. It's used to test Open Add-On Manager.",
+        "iconUrl": "https://raw.githubusercontent.com/OpenAddOnManager/OpenAddOnManager/master/icon.png",
 
-        "sourceUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth.git",
+        "sourceUrl": "https://github.com/OpenAddOnManager/BlankAddOn.git",
         "sourceBranch": "test",
-        "isPrereleaseVersion":  true,
+        "isPrereleaseVersion": true,
 
         "authorName": "CodeBleu",
 
-        "addOnPageUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth",
-        "supportUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth/issues"
+        "addOnPageUrl": "https://github.com/OpenAddOnManager/BlankAddOn",
+        "supportUrl": "https://github.com/OpenAddOnManager/BlankAddOn/issues"
+    },
+
+    "51daaeac-4e71-4745-af85-6f8424aee426": {
+        "name": "Blank Add-On",
+        "description": "This is a World of Warcraft add-on that does absolutely nothing. It's used to test Open Add-On Manager.",
+        "releaseChannelId": "_ptr_",
+        "iconUrl": "https://raw.githubusercontent.com/OpenAddOnManager/OpenAddOnManager/master/icon.png",
+
+        "sourceUrl": "https://github.com/OpenAddOnManager/BlankAddOn.git",
+        "sourceBranch": "ptr/master",
+
+        "authorName": "CodeBleu",
+
+        "addOnPageUrl": "https://github.com/OpenAddOnManager/BlankAddOn",
+        "supportUrl": "https://github.com/OpenAddOnManager/BlankAddOn/issues"
+    },
+
+    "107cf32d-191b-4e1d-ab2d-63801fd12d6e": {
+        "name": "Blank Add-On",
+        "description": "This is a World of Warcraft add-on that does absolutely nothing. It's used to test Open Add-On Manager.",
+        "releaseChannelId": "_ptr_",
+        "iconUrl": "https://raw.githubusercontent.com/OpenAddOnManager/OpenAddOnManager/master/icon.png",
+
+        "sourceUrl": "https://github.com/OpenAddOnManager/BlankAddOn.git",
+        "sourceBranch": "ptr/test",
+        "isPrereleaseVersion": true,
+
+        "authorName": "CodeBleu",
+
+        "addOnPageUrl": "https://github.com/OpenAddOnManager/BlankAddOn",
+        "supportUrl": "https://github.com/OpenAddOnManager/BlankAddOn/issues"
+    },
+
+    "98ffc22d-4c6b-4004-9f07-65401976ce10": {
+        "name": "Blank Add-On",
+        "description": "This is a World of Warcraft add-on that does absolutely nothing. It's used to test Open Add-On Manager.",
+        "releaseChannelId": "_classic_beta_",
+        "iconUrl": "https://raw.githubusercontent.com/OpenAddOnManager/OpenAddOnManager/master/icon.png",
+
+        "sourceUrl": "https://github.com/OpenAddOnManager/BlankAddOn.git",
+        "sourceBranch": "classic/master",
+
+        "authorName": "CodeBleu",
+
+        "addOnPageUrl": "https://github.com/OpenAddOnManager/BlankAddOn",
+        "supportUrl": "https://github.com/OpenAddOnManager/BlankAddOn/issues"
+    },
+
+    "fc500c98-0d39-4310-8e81-162c12c9db72": {
+        "name": "Blank Add-On",
+        "description": "This is a World of Warcraft add-on that does absolutely nothing. It's used to test Open Add-On Manager.",
+        "releaseChannelId": "_classic_beta_",
+        "iconUrl": "https://raw.githubusercontent.com/OpenAddOnManager/OpenAddOnManager/master/icon.png",
+
+        "sourceUrl": "https://github.com/OpenAddOnManager/BlankAddOn.git",
+        "sourceBranch": "classic/test",
+        "isPrereleaseVersion": true,
+
+        "authorName": "CodeBleu",
+
+        "addOnPageUrl": "https://github.com/OpenAddOnManager/BlankAddOn",
+        "supportUrl": "https://github.com/OpenAddOnManager/BlankAddOn/issues"
     }
 }

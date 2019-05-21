@@ -40,15 +40,15 @@ namespace OpenAddOnManager.Tests
         [TestMethod]
         public async Task AddOnStatesPersistAsync()
         {
-            var alamoReeburthKey = Guid.Parse("945fad13-7ec7-4149-9541-3852bfad0673");
+            var blankAddOnKey = Guid.Parse("945fad13-7ec7-4149-9541-3852bfad0673");
             var testStorageDirectory = GetTestStorageDirectory();
             using (var manager = await AddOnManager.StartAsync(testStorageDirectory, null))
-                Assert.IsTrue(await manager.AddOns[alamoReeburthKey].DownloadAsync());
+                Assert.IsTrue(await manager.AddOns[blankAddOnKey].DownloadAsync());
             using (var manager = await AddOnManager.StartAsync(testStorageDirectory, null))
             {
-                var alamoReeburth = manager.AddOns[alamoReeburthKey];
-                Assert.IsTrue(alamoReeburth.IsDownloaded);
-                await alamoReeburth.DeleteAsync();
+                var blankAddOn = manager.AddOns[blankAddOnKey];
+                Assert.IsTrue(blankAddOn.IsDownloaded);
+                await blankAddOn.DeleteAsync();
             }
             CleanTestStorageDirectory(testStorageDirectory);
         }

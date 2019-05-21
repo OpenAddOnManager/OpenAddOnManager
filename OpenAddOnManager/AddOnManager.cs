@@ -19,7 +19,7 @@ namespace OpenAddOnManager
     {
         public static IReadOnlyList<Uri> DefaultManifestUrls { get; } = new Uri[]
         {
-            new Uri("https://raw.githubusercontent.com/BigBadBleuCheese/OpenAddOnManager/master/addOns.json")
+            new Uri("https://raw.githubusercontent.com/OpenAddOnManager/OpenAddOnManager/master/addOns.json")
         }.ToImmutableArray();
 
         public static TimeSpan UpdateAvailableAddOnsTimerDuration { get; } = TimeSpan.FromDays(1);

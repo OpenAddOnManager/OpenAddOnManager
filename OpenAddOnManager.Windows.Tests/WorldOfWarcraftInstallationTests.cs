@@ -31,53 +31,53 @@ namespace OpenAddOnManager.Windows.Tests
 
         #endregion Helper Methods
 
+        static readonly Guid blankAddOnKey = Guid.Parse("945fad13-7ec7-4149-9541-3852bfad0673");
+
         [TestMethod]
-        public async Task AlamoReeburthFullLifecycleInRetail()
+        public async Task FullLifecycleInRetail()
         {
-            var alamoReeburthKey = Guid.Parse("945fad13-7ec7-4149-9541-3852bfad0673");
             var testStorageDirectory = GetTestStorageDirectory();
             using (var installation = await WorldOfWarcraftInstallation.GetAsync())
             using (var manager = await AddOnManager.StartAsync(testStorageDirectory, installation))
             {
-                var alamoReeburth = manager.AddOns[alamoReeburthKey];
-                Assert.IsFalse(alamoReeburth.IsDownloaded);
-                Assert.IsFalse(alamoReeburth.IsLicensed);
-                await alamoReeburth.DownloadAsync();
-                Assert.IsTrue(alamoReeburth.IsDownloaded);
-                Assert.IsTrue(alamoReeburth.IsLicensed);
-                Assert.IsFalse(alamoReeburth.IsLicenseAgreed);
-                alamoReeburth.AgreeToLicense();
-                Assert.IsTrue(alamoReeburth.IsLicenseAgreed);
-                Assert.IsFalse(alamoReeburth.IsInstalled);
-                await alamoReeburth.InstallAsync();
-                Assert.IsTrue(alamoReeburth.IsInstalled);
-                await alamoReeburth.UninstallAsync();
-                Assert.IsFalse(alamoReeburth.IsInstalled);
-                await alamoReeburth.DeleteAsync();
-                Assert.IsFalse(alamoReeburth.IsDownloaded);
+                var blankAddOn = manager.AddOns[blankAddOnKey];
+                Assert.IsFalse(blankAddOn.IsDownloaded);
+                Assert.IsFalse(blankAddOn.IsLicensed);
+                await blankAddOn.DownloadAsync();
+                Assert.IsTrue(blankAddOn.IsDownloaded);
+                Assert.IsTrue(blankAddOn.IsLicensed);
+                Assert.IsFalse(blankAddOn.IsLicenseAgreed);
+                blankAddOn.AgreeToLicense();
+                Assert.IsTrue(blankAddOn.IsLicenseAgreed);
+                Assert.IsFalse(blankAddOn.IsInstalled);
+                await blankAddOn.InstallAsync();
+                Assert.IsTrue(blankAddOn.IsInstalled);
+                await blankAddOn.UninstallAsync();
+                Assert.IsFalse(blankAddOn.IsInstalled);
+                await blankAddOn.DeleteAsync();
+                Assert.IsFalse(blankAddOn.IsDownloaded);
             }
             CleanTestStorageDirectory(testStorageDirectory);
         }
 
         [TestMethod, ExpectedException(typeof(UserHasNotAgreedToLicenseException))]
-        public async Task AlamoReeburthLicenseFailureInRetail()
+        public async Task LicenseFailureInRetail()
         {
-            var alamoReeburthKey = Guid.Parse("945fad13-7ec7-4149-9541-3852bfad0673");
             var testStorageDirectory = GetTestStorageDirectory();
             try
             {
                 using (var installation = await WorldOfWarcraftInstallation.GetAsync())
                 using (var manager = await AddOnManager.StartAsync(testStorageDirectory, installation))
                 {
-                    var alamoReeburth = manager.AddOns[alamoReeburthKey];
-                    Assert.IsFalse(alamoReeburth.IsDownloaded);
-                    Assert.IsFalse(alamoReeburth.IsLicensed);
-                    await alamoReeburth.DownloadAsync();
-                    Assert.IsTrue(alamoReeburth.IsDownloaded);
-                    Assert.IsTrue(alamoReeburth.IsLicensed);
-                    Assert.IsFalse(alamoReeburth.IsLicenseAgreed);
-                    Assert.IsFalse(alamoReeburth.IsInstalled);
-                    await alamoReeburth.InstallAsync();
+                    var blankAddOn = manager.AddOns[blankAddOnKey];
+                    Assert.IsFalse(blankAddOn.IsDownloaded);
+                    Assert.IsFalse(blankAddOn.IsLicensed);
+                    await blankAddOn.DownloadAsync();
+                    Assert.IsTrue(blankAddOn.IsDownloaded);
+                    Assert.IsTrue(blankAddOn.IsLicensed);
+                    Assert.IsFalse(blankAddOn.IsLicenseAgreed);
+                    Assert.IsFalse(blankAddOn.IsInstalled);
+                    await blankAddOn.InstallAsync();
                 }
             }
             finally
