@@ -24,7 +24,7 @@ namespace OpenAddOnManager
 
         public static TimeSpan UpdateAvailableAddOnsTimerDuration { get; } = TimeSpan.FromDays(1);
 
-        public static Task<AddOnManager> StartAsync(DirectoryInfo storageDirectory, IWorldOfWarcraftInstallation worldOfWarcraftInstallation) => Task.Run(async () =>
+        public static Task<AddOnManager> StartAsync(DirectoryInfo storageDirectory, IWorldOfWarcraftInstallation worldOfWarcraftInstallation, SynchronizationContext synchronizationContext = null) => Task.Run(async () =>
         {
             var httpClientHandler = new HttpClientHandler
             {
@@ -33,17 +33,18 @@ namespace OpenAddOnManager
                 CookieContainer = new CookieContainer(),
                 UseCookies = true
             };
-            var manager = new AddOnManager(storageDirectory, httpClientHandler, worldOfWarcraftInstallation);
+            var manager = new AddOnManager(storageDirectory, httpClientHandler, worldOfWarcraftInstallation, synchronizationContext);
             await manager.UpdateAvailableAddOnsAsync().ConfigureAwait(false);
             manager.InitializeUpdateAvailableAddOnsTimer();
             return manager;
         });
 
-        AddOnManager(DirectoryInfo storageDirectory, HttpClientHandler httpClientHandler, IWorldOfWarcraftInstallation worldOfWarcraftInstallation)
+        AddOnManager(DirectoryInfo storageDirectory, HttpClientHandler httpClientHandler, IWorldOfWarcraftInstallation worldOfWarcraftInstallation, SynchronizationContext synchronizationContext)
         {
             this.httpClientHandler = httpClientHandler;
             WorldOfWarcraftInstallation = worldOfWarcraftInstallation;
-            AddOns = new ReadOnlyObservableRangeDictionary<Guid, AddOn>(addOns);
+            addOns = new SynchronizedObservableDictionary<Guid, AddOn>(synchronizationContext);
+            AddOns = new ReadOnlySynchronizedObservableRangeDictionary<Guid, AddOn>(addOns);
             ManifestUrls = new ReadOnlyObservableCollection<Uri>(manifestUrls);
             StorageDirectory = storageDirectory;
             if (StorageDirectory != null)
@@ -61,8 +62,7 @@ namespace OpenAddOnManager
             }
         }
 
-        readonly ObservableDictionary<Guid, AddOn> addOns = new ObservableDictionary<Guid, AddOn>();
-        readonly AsyncLock addOnsAccess = new AsyncLock();
+        readonly SynchronizedObservableDictionary<Guid, AddOn> addOns;
         readonly HttpClientHandler httpClientHandler;
         readonly ObservableCollection<Uri> manifestUrls = new ObservableCollection<Uri>(DefaultManifestUrls);
         readonly AsyncLock manifestUrlsAccess = new AsyncLock();
@@ -90,7 +90,6 @@ namespace OpenAddOnManager
             using (await manifestUrlsAccess.LockAsync().ConfigureAwait(false))
                 manifestUrls = this.manifestUrls.ToImmutableArray();
             var jsonSerializer = JsonSerializer.CreateDefault();
-            using (await addOnsAccess.LockAsync().ConfigureAwait(false))
             using (var httpClient = CreateHttpClient())
                 foreach (var manifestUrl in manifestUrls)
                     using (var responseStream = await httpClient.GetStreamAsync(manifestUrl).ConfigureAwait(false))
@@ -116,7 +115,7 @@ namespace OpenAddOnManager
 
         async void UpdateAvailableAddOnsTimerCallback(object state) => await UpdateAvailableAddOnsAsync().ConfigureAwait(false);
 
-        public ReadOnlyObservableRangeDictionary<Guid, AddOn> AddOns { get; }
+        public ReadOnlySynchronizedObservableRangeDictionary<Guid, AddOn> AddOns { get; }
 
         public DirectoryInfo AddOnsDirectory { get; }
 

@@ -1,7 +1,6 @@
 using Gear.ActiveQuery;
 using Gear.Components;
 using Microsoft.Win32;
-using Nito.AsyncEx;
 using OpenAddOnManager.Exceptions;
 using System;
 using System.Collections.Generic;
@@ -31,24 +30,20 @@ namespace OpenAddOnManager.Windows
                         throw new WorldOfWarcraftInstallationUnavailableException();
                 }
             }
-            var installation = new WorldOfWarcraftInstallation { Directory = directory };
-            if (synchronizationContext != null)
-                installation.ClientsForBinding = installation.clientsForBinding.SwitchContext(synchronizationContext);
+            var installation = new WorldOfWarcraftInstallation(synchronizationContext) { Directory = directory };
             await installation.AddClientsAsync().ConfigureAwait(false);
             installation.InitializeFileSystemWatcher();
             return installation;
         }
 
-        WorldOfWarcraftInstallation()
+        WorldOfWarcraftInstallation(SynchronizationContext synchronizationContext)
         {
-            clients = new ObservableDictionary<string, IWorldOfWarcraftInstallationClient>(StringComparer.OrdinalIgnoreCase);
-            Clients = new ReadOnlyObservableRangeDictionary<string, IWorldOfWarcraftInstallationClient>(clients);
-            clientsForBinding = clients.ToActiveEnumerable();
+            clients = new SynchronizedObservableDictionary<string, IWorldOfWarcraftInstallationClient>(synchronizationContext, StringComparer.OrdinalIgnoreCase);
+            Clients = new ReadOnlySynchronizedObservableRangeDictionary<string, IWorldOfWarcraftInstallationClient>(clients);
+            ClientsForBinding = clients.ToActiveEnumerable();
         }
 
-        readonly ObservableDictionary<string, IWorldOfWarcraftInstallationClient> clients;
-        readonly AsyncLock clientsAccess = new AsyncLock();
-        readonly IActiveEnumerable<IWorldOfWarcraftInstallationClient> clientsForBinding;
+        readonly SynchronizedObservableDictionary<string, IWorldOfWarcraftInstallationClient> clients;
         FileSystemWatcher fileSystemWatcher;
 
         Task AddClientsAsync() => Task.Run(async () =>
@@ -71,7 +66,6 @@ namespace OpenAddOnManager.Windows
             if (disposing)
             {
                 ClientsForBinding?.Dispose();
-                clientsForBinding?.Dispose();
                 fileSystemWatcher?.Dispose();
             }
         }
@@ -85,21 +79,18 @@ namespace OpenAddOnManager.Windows
 
         async void FileSystemWatcherEventHandler(object sender, FileSystemEventArgs e)
         {
-            using (await clientsAccess.LockAsync().ConfigureAwait(false))
+            foreach (var clientKey in clients.Keys.ToImmutableArray())
             {
-                foreach (var clientKey in clients.Keys.ToImmutableArray())
+                var client = clients[clientKey];
+                var clientDirectory = client.Directory;
+                clientDirectory.Refresh();
+                if (!clientDirectory.Exists)
                 {
-                    var client = clients[clientKey];
-                    var clientDirectory = client.Directory;
-                    clientDirectory.Refresh();
-                    if (!clientDirectory.Exists)
-                    {
-                        clients.Remove(clientKey);
-                        client.Dispose();
-                    }
+                    clients.Remove(clientKey);
+                    client.Dispose();
                 }
-                await AddClientsAsync().ConfigureAwait(false);
             }
+            await AddClientsAsync().ConfigureAwait(false);
         }
 
         void InitializeFileSystemWatcher()
