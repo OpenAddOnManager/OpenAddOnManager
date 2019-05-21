@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,19 +15,18 @@ using System.Windows.Shapes;
 
 namespace OpenAddOnManager.Windows
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
-        {
-            InitializeComponent();
-        }
+        public MainWindow() => InitializeComponent();
 
-        private void ButtonExit_Click(object sender, RoutedEventArgs e)
+        private void ClosedHandler(object sender, EventArgs e)
         {
+            var worldOfWarcraftInstallation = AddOnManager?.WorldOfWarcraftInstallation;
+            AddOnManager?.Dispose();
+            (worldOfWarcraftInstallation as IDisposable)?.Dispose();
             Application.Current.Shutdown();
         }
+
+        AddOnManager AddOnManager => DataContext as AddOnManager;
     }
 }

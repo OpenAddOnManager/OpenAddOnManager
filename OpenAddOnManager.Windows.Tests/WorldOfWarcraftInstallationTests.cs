@@ -37,9 +37,10 @@ namespace OpenAddOnManager.Windows.Tests
         public async Task FullLifecycleInRetail()
         {
             var testStorageDirectory = GetTestStorageDirectory();
-            using (var installation = await WorldOfWarcraftInstallation.GetAsync())
-            using (var manager = await AddOnManager.StartAsync(testStorageDirectory, installation))
+            using (var installation = new WorldOfWarcraftInstallation())
+            using (var manager = new AddOnManager(testStorageDirectory, installation))
             {
+                await manager.InitializationComplete;
                 var blankAddOn = manager.AddOns[blankAddOnKey];
                 Assert.IsFalse(blankAddOn.IsDownloaded);
                 Assert.IsFalse(blankAddOn.IsLicensed);
@@ -66,9 +67,10 @@ namespace OpenAddOnManager.Windows.Tests
             var testStorageDirectory = GetTestStorageDirectory();
             try
             {
-                using (var installation = await WorldOfWarcraftInstallation.GetAsync())
-                using (var manager = await AddOnManager.StartAsync(testStorageDirectory, installation))
+                using (var installation = new WorldOfWarcraftInstallation())
+                using (var manager = new AddOnManager(testStorageDirectory, installation))
                 {
+                    await manager.InitializationComplete;
                     var blankAddOn = manager.AddOns[blankAddOnKey];
                     Assert.IsFalse(blankAddOn.IsDownloaded);
                     Assert.IsFalse(blankAddOn.IsLicensed);
@@ -89,8 +91,11 @@ namespace OpenAddOnManager.Windows.Tests
         [TestMethod]
         public async Task RetailIsInstalledAsync()
         {
-            using (var installation = await WorldOfWarcraftInstallation.GetAsync())
+            using (var installation = new WorldOfWarcraftInstallation())
+            {
+                await installation.InitializationComplete;
                 Assert.IsTrue(installation.Clients.ContainsKey("_retail_"));
+            }
         }
     }
 }

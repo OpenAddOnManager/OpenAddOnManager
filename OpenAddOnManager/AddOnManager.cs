@@ -1,3 +1,4 @@
+using Gear.ActiveQuery;
 using Gear.Components;
 using Newtonsoft.Json;
 using Nito.AsyncEx;
@@ -24,46 +25,34 @@ namespace OpenAddOnManager
 
         public static TimeSpan UpdateAvailableAddOnsTimerDuration { get; } = TimeSpan.FromDays(1);
 
-        public static Task<AddOnManager> StartAsync(DirectoryInfo storageDirectory, IWorldOfWarcraftInstallation worldOfWarcraftInstallation, SynchronizationContext synchronizationContext = null) => Task.Run(async () =>
+        public AddOnManager(DirectoryInfo storageDirectory, IWorldOfWarcraftInstallation worldOfWarcraftInstallation, SynchronizationContext synchronizationContext = null)
         {
-            var httpClientHandler = new HttpClientHandler
+            httpClientHandler = new HttpClientHandler
             {
                 AllowAutoRedirect = true,
                 AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip,
                 CookieContainer = new CookieContainer(),
                 UseCookies = true
             };
-            var manager = new AddOnManager(storageDirectory, httpClientHandler, worldOfWarcraftInstallation, synchronizationContext);
-            await manager.UpdateAvailableAddOnsAsync().ConfigureAwait(false);
-            manager.InitializeUpdateAvailableAddOnsTimer();
-            return manager;
-        });
-
-        AddOnManager(DirectoryInfo storageDirectory, HttpClientHandler httpClientHandler, IWorldOfWarcraftInstallation worldOfWarcraftInstallation, SynchronizationContext synchronizationContext)
-        {
-            this.httpClientHandler = httpClientHandler;
             WorldOfWarcraftInstallation = worldOfWarcraftInstallation;
-            addOns = new SynchronizedObservableDictionary<Guid, AddOn>(synchronizationContext);
+            addOns = new SynchronizedObservableDictionary<Guid, AddOn>();
             AddOns = new ReadOnlySynchronizedObservableRangeDictionary<Guid, AddOn>(addOns);
+            addOnsForBinding = addOns.ToActiveEnumerable();
+            AddOnsForBinding = synchronizationContext == null ? addOnsForBinding : addOnsForBinding.SwitchContext(synchronizationContext);
             ManifestUrls = new ReadOnlyObservableCollection<Uri>(manifestUrls);
             StorageDirectory = storageDirectory;
             if (StorageDirectory != null)
-            {
                 AddOnsDirectory = new DirectoryInfo(Path.Combine(StorageDirectory.FullName, "AddOnRepositories"));
-                if (!AddOnsDirectory.Exists)
-                    AddOnsDirectory.Create();
-                addOns.AddRange
-                (
-                    AddOnsDirectory.GetFiles("*.json")
-                        .Select(file => Guid.TryParse(file.Name[0..^5], out var key) ? key : default)
-                        .Where(key => key != default)
-                        .Select(key => new KeyValuePair<Guid, AddOn>(key, new AddOn(this, key, true)))
-                );
-            }
+
+            initializationCompleteTaskCompletionSource = new TaskCompletionSource<object>();
+            InitializationComplete = initializationCompleteTaskCompletionSource.Task;
+            ThreadPool.QueueUserWorkItem(Initialize);
         }
 
         readonly SynchronizedObservableDictionary<Guid, AddOn> addOns;
+        readonly IActiveEnumerable<AddOn> addOnsForBinding;
         readonly HttpClientHandler httpClientHandler;
+        readonly TaskCompletionSource<object> initializationCompleteTaskCompletionSource;
         readonly ObservableCollection<Uri> manifestUrls = new ObservableCollection<Uri>(DefaultManifestUrls);
         readonly AsyncLock manifestUrlsAccess = new AsyncLock();
         Timer updateAvailableAddOnsTimer;
@@ -71,7 +60,11 @@ namespace OpenAddOnManager
         protected override void Dispose(bool disposing)
         {
             if (disposing)
+            {
+                AddOnsForBinding?.Dispose();
+                addOnsForBinding?.Dispose();
                 updateAvailableAddOnsTimer?.Dispose();
+            }
         }
 
         HttpClient CreateHttpClient()
@@ -80,6 +73,32 @@ namespace OpenAddOnManager
             var httpClient = new HttpClient(httpClientHandler);
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"OpenAddOnManager/{assembly.Major}.{assembly.Minor}");
             return httpClient;
+        }
+
+        async void Initialize(object state)
+        {
+            try
+            {
+                if (AddOnsDirectory != null)
+                {
+                    if (!AddOnsDirectory.Exists)
+                        AddOnsDirectory.Create();
+                    addOns.AddRange
+                    (
+                        AddOnsDirectory.GetFiles("*.json")
+                            .Select(file => Guid.TryParse(file.Name[0..^5], out var key) ? key : default)
+                            .Where(key => key != default)
+                            .Select(key => new KeyValuePair<Guid, AddOn>(key, new AddOn(this, key, true)))
+                    );
+                }
+                await UpdateAvailableAddOnsAsync().ConfigureAwait(false);
+                InitializeUpdateAvailableAddOnsTimer();
+                initializationCompleteTaskCompletionSource.SetResult(null);
+            }
+            catch (Exception ex)
+            {
+                initializationCompleteTaskCompletionSource.SetException(ex);
+            }
         }
 
         void InitializeUpdateAvailableAddOnsTimer() => updateAvailableAddOnsTimer = new Timer(UpdateAvailableAddOnsTimerCallback, null, UpdateAvailableAddOnsTimerDuration, UpdateAvailableAddOnsTimerDuration);
@@ -118,6 +137,10 @@ namespace OpenAddOnManager
         public ReadOnlySynchronizedObservableRangeDictionary<Guid, AddOn> AddOns { get; }
 
         public DirectoryInfo AddOnsDirectory { get; }
+
+        public IActiveEnumerable<AddOn> AddOnsForBinding { get; }
+
+        public Task InitializationComplete { get; }
 
         public ReadOnlyObservableCollection<Uri> ManifestUrls { get; }
 

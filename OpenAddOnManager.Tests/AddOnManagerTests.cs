@@ -33,8 +33,11 @@ namespace OpenAddOnManager.Tests
         [TestMethod]
         public async Task AddOnManifestLoadsAsync()
         {
-            using (var manager = await AddOnManager.StartAsync(null, null))
+            using (var manager = new AddOnManager(null, null))
+            {
+                await manager.InitializationComplete;
                 Assert.IsTrue(manager.AddOns.Count > 0);
+            }
         }
 
         [TestMethod]
@@ -42,10 +45,14 @@ namespace OpenAddOnManager.Tests
         {
             var blankAddOnKey = Guid.Parse("945fad13-7ec7-4149-9541-3852bfad0673");
             var testStorageDirectory = GetTestStorageDirectory();
-            using (var manager = await AddOnManager.StartAsync(testStorageDirectory, null))
-                Assert.IsTrue(await manager.AddOns[blankAddOnKey].DownloadAsync());
-            using (var manager = await AddOnManager.StartAsync(testStorageDirectory, null))
+            using (var manager = new AddOnManager(testStorageDirectory, null))
             {
+                await manager.InitializationComplete;
+                Assert.IsTrue(await manager.AddOns[blankAddOnKey].DownloadAsync());
+            }
+            using (var manager = new AddOnManager(testStorageDirectory, null))
+            {
+                await manager.InitializationComplete;
                 var blankAddOn = manager.AddOns[blankAddOnKey];
                 Assert.IsTrue(blankAddOn.IsDownloaded);
                 await blankAddOn.DeleteAsync();

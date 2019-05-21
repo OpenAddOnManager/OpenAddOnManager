@@ -8,7 +8,6 @@ namespace OpenAddOnManager
     {
         DirectoryInfo Directory { get; }
         IWorldOfWarcraftInstallation Installation { get; }
-        string InterfaceVersion { get; }
         string ReleaseChannelId { get; }
         string ReleaseChannelName { get; }
     }

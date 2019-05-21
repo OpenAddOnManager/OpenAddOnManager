@@ -14,7 +14,7 @@ namespace OpenAddOnManager.Windows
 {
     public class WorldOfWarcraftInstallation : SyncDisposable, IWorldOfWarcraftInstallation
     {
-        public static async Task<WorldOfWarcraftInstallation> GetAsync(DirectoryInfo directory = null, SynchronizationContext synchronizationContext = null)
+        public WorldOfWarcraftInstallation(DirectoryInfo directory = null, SynchronizationContext synchronizationContext = null)
         {
             if (directory == null)
             {
@@ -30,33 +30,36 @@ namespace OpenAddOnManager.Windows
                         throw new WorldOfWarcraftInstallationUnavailableException();
                 }
             }
-            var installation = new WorldOfWarcraftInstallation(synchronizationContext) { Directory = directory };
-            await installation.AddClientsAsync().ConfigureAwait(false);
-            installation.InitializeFileSystemWatcher();
-            return installation;
-        }
 
-        WorldOfWarcraftInstallation(SynchronizationContext synchronizationContext)
-        {
-            clients = new SynchronizedObservableDictionary<string, IWorldOfWarcraftInstallationClient>(synchronizationContext, StringComparer.OrdinalIgnoreCase);
+            Directory = directory;
+            clients = new SynchronizedObservableDictionary<string, IWorldOfWarcraftInstallationClient>();
             Clients = new ReadOnlySynchronizedObservableRangeDictionary<string, IWorldOfWarcraftInstallationClient>(clients);
-            ClientsForBinding = clients.ToActiveEnumerable();
+            clientsForBinding = clients.ToActiveEnumerable();
+            ClientsForBinding = synchronizationContext == null ? clientsForBinding : clientsForBinding.SwitchContext(synchronizationContext);
+
+            initializationCompleteTaskCompletionSource = new TaskCompletionSource<object>();
+            InitializationComplete = initializationCompleteTaskCompletionSource.Task;
+            ThreadPool.QueueUserWorkItem(Initialize);
         }
 
         readonly SynchronizedObservableDictionary<string, IWorldOfWarcraftInstallationClient> clients;
+        readonly IActiveEnumerable<IWorldOfWarcraftInstallationClient> clientsForBinding;
         FileSystemWatcher fileSystemWatcher;
+        readonly TaskCompletionSource<object> initializationCompleteTaskCompletionSource;
 
-        Task AddClientsAsync() => Task.Run(async () =>
+        Task AddClientsAsync() => Task.Run(() =>
         {
             foreach (var subDirectory in Directory.GetDirectories().Where(subDirectory => subDirectory.Name.StartsWith("_") && subDirectory.Name.EndsWith("_") && !clients.ContainsKey(subDirectory.Name)))
             {
+                WorldOfWarcraftInstallationClient client = null;
                 try
                 {
-                    clients.Add(subDirectory.Name, await WorldOfWarcraftInstallationClient.CreateAsync(this, subDirectory).ConfigureAwait(false));
+                    client = new WorldOfWarcraftInstallationClient(this, subDirectory);
+                    clients.Add(subDirectory.Name, client);
                 }
                 catch
                 {
-                    // TODO: report to user
+                    client?.Dispose();
                 }
             }
         });
@@ -66,6 +69,7 @@ namespace OpenAddOnManager.Windows
             if (disposing)
             {
                 ClientsForBinding?.Dispose();
+                clientsForBinding?.Dispose();
                 fileSystemWatcher?.Dispose();
             }
         }
@@ -93,6 +97,20 @@ namespace OpenAddOnManager.Windows
             await AddClientsAsync().ConfigureAwait(false);
         }
 
+        async void Initialize(object state)
+        {
+            try
+            {
+                await AddClientsAsync().ConfigureAwait(false);
+                InitializeFileSystemWatcher();
+                initializationCompleteTaskCompletionSource.SetResult(null);
+            }
+            catch (Exception ex)
+            {
+                initializationCompleteTaskCompletionSource.SetException(ex);
+            }
+        }
+
         void InitializeFileSystemWatcher()
         {
             fileSystemWatcher = new FileSystemWatcher(Directory.FullName);
@@ -111,5 +129,7 @@ namespace OpenAddOnManager.Windows
         public IActiveEnumerable<IWorldOfWarcraftInstallationClient> ClientsForBinding { get; private set; }
 
         public DirectoryInfo Directory { get; private set; }
+
+        public Task InitializationComplete { get; }
     }
 }

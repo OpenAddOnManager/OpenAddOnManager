@@ -170,6 +170,7 @@ namespace OpenAddOnManager
             var worldOfWacraftInstallation = addOnManager.WorldOfWarcraftInstallation;
             if (worldOfWacraftInstallation == null)
                 throw new WorldOfWarcraftInstallationUnavailableException();
+            await worldOfWacraftInstallation.InitializationComplete.ConfigureAwait(false);
             if (!worldOfWacraftInstallation.Clients.TryGetValue(releaseChannelId, out var client))
                 throw new WorldOfWarcraftInstallationClientUnavailableException(releaseChannelId);
             if (IsLicensed && !isLicenseAgreed)
@@ -275,13 +276,14 @@ namespace OpenAddOnManager
                     });
         }
 
-        public Task<bool> UninstallAsync(bool deleteSavedVariables = true) => Task.Run(() =>
+        public Task<bool> UninstallAsync(bool deleteSavedVariables = true) => Task.Run(async () =>
         {
             if (!IsInstalled)
                 return false;
             var worldOfWacraftInstallation = addOnManager.WorldOfWarcraftInstallation;
             if (worldOfWacraftInstallation == null)
                 throw new WorldOfWarcraftInstallationUnavailableException();
+            await worldOfWacraftInstallation.InitializationComplete.ConfigureAwait(false);
             if (!worldOfWacraftInstallation.Clients.TryGetValue(releaseChannelId, out var client))
                 throw new WorldOfWarcraftInstallationClientUnavailableException(releaseChannelId);
             var clientInterfaceDirectory = new DirectoryInfo(Path.Combine(client.Directory.FullName, "Interface"));
