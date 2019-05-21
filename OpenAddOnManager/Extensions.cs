@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -10,18 +9,19 @@ namespace OpenAddOnManager
     public static class Extensions
     {
         static readonly Regex wtfConfigSetVariablePattern = new Regex("^SET (?<name>[^ ]*) \\\"(?<value>.*)\\\"$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        static readonly EnumerationOptions copyContentsEnumerationOptions = new EnumerationOptions { AttributesToSkip = FileAttributes.Hidden | FileAttributes.System };
 
-        public static IReadOnlyList<FileInfo> CopyContentsTo(this DirectoryInfo sourceDirectory, DirectoryInfo targetDirectory, bool overwrite = false, IReadOnlyList<Regex> excludeDirectoryPatterns = null)
+        public static IReadOnlyList<FileInfo> CopyContentsTo(this DirectoryInfo sourceDirectory, DirectoryInfo targetDirectory, bool overwrite = false)
         {
             var copiedFiles = new List<FileInfo>();
-            foreach (var sourceSubDirectory in sourceDirectory.GetDirectories().Where(sourceSubDirectory => !(excludeDirectoryPatterns?.Any(excludeDirectoryPattern => excludeDirectoryPattern.IsMatch(sourceSubDirectory.FullName)) ?? false)))
+            foreach (var sourceSubDirectory in sourceDirectory.GetDirectories("*.*", copyContentsEnumerationOptions))
             {
                 var targetSubDirectory = new DirectoryInfo(Path.Combine(targetDirectory.FullName, sourceSubDirectory.Name));
                 if (!targetSubDirectory.Exists)
                     targetSubDirectory.Create();
                 copiedFiles.AddRange(CopyContentsTo(sourceSubDirectory, targetSubDirectory, overwrite));
             }
-            foreach (var sourceFile in sourceDirectory.GetFiles())
+            foreach (var sourceFile in sourceDirectory.GetFiles("*.*", copyContentsEnumerationOptions))
                 copiedFiles.Add(sourceFile.CopyTo(Path.Combine(targetDirectory.FullName, sourceFile.Name), overwrite));
             return copiedFiles.ToImmutableArray();
         }

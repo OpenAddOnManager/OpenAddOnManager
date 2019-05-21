@@ -8,6 +8,28 @@ namespace OpenAddOnManager.Tests
     [TestClass]
     public class AddOnManagerTests
     {
+        #region Helper Methods
+
+        void CleanTestStorageDirectory(DirectoryInfo testStorageDirectory)
+        {
+            testStorageDirectory.Refresh();
+            if (testStorageDirectory.Exists)
+            {
+                foreach (var fileSystemInfo in testStorageDirectory.GetFileSystemInfos("*.*", SearchOption.AllDirectories))
+                    fileSystemInfo.Attributes &= ~FileAttributes.ReadOnly;
+                testStorageDirectory.Delete(true);
+            }
+        }
+
+        DirectoryInfo GetTestStorageDirectory()
+        {
+            var testStorageDirectory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), $"Test Storage {Guid.NewGuid():N}"));
+            testStorageDirectory.Create();
+            return testStorageDirectory;
+        }
+
+        #endregion Helper Methods
+
         [TestMethod]
         public async Task AddOnManifestLoadsAsync()
         {
@@ -29,24 +51,6 @@ namespace OpenAddOnManager.Tests
                 await alamoReeburth.DeleteAsync();
             }
             CleanTestStorageDirectory(testStorageDirectory);
-        }
-
-        void CleanTestStorageDirectory(DirectoryInfo testStorageDirectory)
-        {
-            testStorageDirectory.Refresh();
-            if (testStorageDirectory.Exists)
-            {
-                foreach (var fileSystemInfo in testStorageDirectory.GetFileSystemInfos("*.*", SearchOption.AllDirectories))
-                    fileSystemInfo.Attributes &= ~FileAttributes.ReadOnly;
-                testStorageDirectory.Delete(true);
-            }
-        }
-
-        DirectoryInfo GetTestStorageDirectory()
-        {
-            var testStorageDirectory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), $"Test Storage {Guid.NewGuid():N}"));
-            testStorageDirectory.Create();
-            return testStorageDirectory;
         }
     }
 }

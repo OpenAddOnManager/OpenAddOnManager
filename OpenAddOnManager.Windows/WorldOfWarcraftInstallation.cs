@@ -1,6 +1,8 @@
 using Gear.ActiveQuery;
 using Gear.Components;
+using Microsoft.Win32;
 using Nito.AsyncEx;
+using OpenAddOnManager.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -13,8 +15,22 @@ namespace OpenAddOnManager.Windows
 {
     public class WorldOfWarcraftInstallation : SyncDisposable, IWorldOfWarcraftInstallation
     {
-        public static async Task<WorldOfWarcraftInstallation> CreateAsync(DirectoryInfo directory, SynchronizationContext synchronizationContext = null)
+        public static async Task<WorldOfWarcraftInstallation> GetAsync(DirectoryInfo directory = null, SynchronizationContext synchronizationContext = null)
         {
+            if (directory == null)
+            {
+                using (var key = Registry.LocalMachine.OpenSubKey("SOFTWARE\\WOW6432Node\\Blizzard Entertainment\\World of Warcraft"))
+                {
+                    if (key?.GetValue("InstallPath") is string installPath && System.IO.Directory.Exists(installPath))
+                    {
+                        directory = new DirectoryInfo(installPath);
+                        if (directory.Name.StartsWith("_") && directory.Name.EndsWith("_"))
+                            directory = directory.Parent;
+                    }
+                    else
+                        throw new WorldOfWarcraftInstallationUnavailableException();
+                }
+            }
             var installation = new WorldOfWarcraftInstallation { Directory = directory };
             if (synchronizationContext != null)
                 installation.ClientsForBinding = installation.clientsForBinding.SwitchContext(synchronizationContext);

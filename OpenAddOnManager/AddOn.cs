@@ -8,15 +8,12 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OpenAddOnManager
 {
     public class AddOn : PropertyChangeNotifier
     {
-        static Regex[] installationExcludedDirectoryPatterns = new Regex[] { new Regex("^\\.git$", RegexOptions.Compiled) };
-
         public static string SignatureEmail { get; } = "no-one@no-where.com";
 
         public static string SignatureName { get; } = "Open Add-On Manager";
@@ -106,6 +103,12 @@ namespace OpenAddOnManager
 
         public void AgreeToLicense()
         {
+            if (!isLicenseAgreed)
+            {
+                if (!IsDownloaded)
+                    throw new InvalidOperationException();
+                IsLicenseAgreed = true;
+            }
         }
 
         public Task<bool> DeleteAsync() => Task.Run(async () =>
@@ -141,7 +144,9 @@ namespace OpenAddOnManager
                 }
                 else
                 {
-                    var pullStatus = Commands.Pull(new Repository(repositoryDirectory.FullName), new Signature(SignatureName, SignatureEmail, DateTimeOffset.Now), new PullOptions { MergeOptions = new MergeOptions { FastForwardStrategy = FastForwardStrategy.FastForwardOnly } }).Status;
+                    MergeStatus pullStatus;
+                    using (var repository = new Repository(repositoryDirectory.FullName))
+                        pullStatus = Commands.Pull(repository, new Signature(SignatureName, SignatureEmail, DateTimeOffset.Now), new PullOptions { MergeOptions = new MergeOptions { FastForwardStrategy = FastForwardStrategy.FastForwardOnly } }).Status;
                     await LoadLicenseAsync().ConfigureAwait(false);
                     return pullStatus == MergeStatus.FastForward;
                 }
@@ -211,10 +216,10 @@ namespace OpenAddOnManager
                         savedVariablesAddOnNames.Add(addOnDirectory.Name);
                     if (toc.SavedVariablesPerCharacter?.Any() ?? false)
                         savedVariablesPerCharacterAddOnNames.Add(addOnDirectory.Name);
-                    var clientAddOnDirectory = new DirectoryInfo(Path.Combine(clientAddOnsDirectory.FullName, tocFile.Name));
+                    var clientAddOnDirectory = new DirectoryInfo(Path.Combine(clientAddOnsDirectory.FullName, tocFile.Name.Substring(0, tocFile.Name.Length - tocFile.Extension.Length)));
                     if (!clientAddOnDirectory.Exists)
                         clientAddOnDirectory.Create();
-                    installedFiles.AddRange(addOnDirectory.CopyContentsTo(clientAddOnDirectory, overwrite: true, excludeDirectoryPatterns: installationExcludedDirectoryPatterns));
+                    installedFiles.AddRange(addOnDirectory.CopyContentsTo(clientAddOnDirectory, overwrite: true));
                 }
             }
 
@@ -223,7 +228,8 @@ namespace OpenAddOnManager
             else
                 foreach (var addOnDirectory in addOnsDirectory.GetDirectories())
                     await installAddOnAsync(addOnDirectory).ConfigureAwait(false);
-            installedSha = new Repository(repositoryDirectory.FullName).Head.Tip.Sha;
+            using (var repository = new Repository(repositoryDirectory.FullName))
+                installedSha = repository.Head.Tip.Sha;
             this.installedFiles = installedFiles.ToImmutableArray();
             this.savedVariablesAddOnNames = savedVariablesAddOnNames.ToImmutableArray();
             this.savedVariablesPerCharacterAddOnNames = savedVariablesPerCharacterAddOnNames.ToImmutableArray();
@@ -288,6 +294,7 @@ namespace OpenAddOnManager
             foreach (var installedFile in installedFiles)
             {
                 containerDirectories.Add(installedFile.Directory);
+                installedFile.Attributes &= ~FileAttributes.ReadOnly;
                 installedFile.Delete();
             }
             containerDirectories.Remove(clientInterfaceDirectory);
@@ -295,7 +302,7 @@ namespace OpenAddOnManager
             foreach (var containerDirectory in containerDirectories.OrderByDescending(containerDirectory => containerDirectory.FullName.Length))
             {
                 containerDirectory.Refresh();
-                if (containerDirectory.GetFileSystemInfos().Length == 0)
+                if (containerDirectory.Exists && containerDirectory.GetFileSystemInfos().Length == 0)
                     containerDirectory.Delete();
             }
             installedSha = null;
