@@ -148,6 +148,8 @@ namespace OpenAddOnManager
                     using (var repository = new Repository(repositoryDirectory.FullName))
                         pullStatus = Commands.Pull(repository, new Signature(SignatureName, SignatureEmail, DateTimeOffset.Now), new PullOptions { MergeOptions = new MergeOptions { FastForwardStrategy = FastForwardStrategy.FastForwardOnly } }).Status;
                     await LoadLicenseAsync().ConfigureAwait(false);
+                    if (pullStatus != MergeStatus.UpToDate)
+                        OnPropertyChanged(nameof(IsUpdateAvailable));
                     return pullStatus == MergeStatus.FastForward;
                 }
             }
@@ -234,6 +236,9 @@ namespace OpenAddOnManager
             this.installedFiles = installedFiles.ToImmutableArray();
             this.savedVariablesAddOnNames = savedVariablesAddOnNames.ToImmutableArray();
             this.savedVariablesPerCharacterAddOnNames = savedVariablesPerCharacterAddOnNames.ToImmutableArray();
+            OnPropertyChanged(nameof(IsInstalled));
+            OnPropertyChanged(nameof(IsUpdateAvailable));
+            SaveState();
         });
 
         async Task LoadLicenseAsync()
@@ -295,9 +300,13 @@ namespace OpenAddOnManager
             var containerDirectories = new HashSet<DirectoryInfo>();
             foreach (var installedFile in installedFiles)
             {
-                containerDirectories.Add(installedFile.Directory);
-                installedFile.Attributes &= ~FileAttributes.ReadOnly;
-                installedFile.Delete();
+                installedFile.Refresh();
+                if (installedFile.Exists)
+                {
+                    containerDirectories.Add(installedFile.Directory);
+                    installedFile.Attributes &= ~FileAttributes.ReadOnly;
+                    installedFile.Delete();
+                }
             }
             containerDirectories.Remove(clientInterfaceDirectory);
             containerDirectories.Remove(clientAddOnsDirectory);
@@ -338,6 +347,9 @@ namespace OpenAddOnManager
             }
             savedVariablesAddOnNames = null;
             savedVariablesPerCharacterAddOnNames = null;
+            OnPropertyChanged(nameof(IsInstalled));
+            OnPropertyChanged(nameof(IsUpdateAvailable));
+            SaveState();
             return true;
         });
 
@@ -366,6 +378,8 @@ namespace OpenAddOnManager
                 if (wasInstalled)
                     await InstallAsync().ConfigureAwait(false);
             }
+
+            SaveState();
         }
 
         public Uri AddOnPageUrl
@@ -419,7 +433,7 @@ namespace OpenAddOnManager
             }
         }
 
-        public bool IsInstalled => installedFiles != null;
+        public bool IsInstalled => installedSha != null;
 
         public bool IsLicenseAgreed
         {
@@ -433,6 +447,17 @@ namespace OpenAddOnManager
         {
             get => isPrereleaseVersion;
             private set => SetBackedProperty(ref isPrereleaseVersion, in value);
+        }
+
+        public bool IsUpdateAvailable
+        {
+            get
+            {
+                if (!IsDownloaded || !IsInstalled)
+                    return false;
+                using (var repository = new Repository(repositoryDirectory.FullName))
+                    return installedSha != repository.Head.Tip.Sha;
+            }
         }
 
         public Guid Key { get; }

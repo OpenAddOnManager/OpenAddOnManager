@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:OpenAddOnManager.Windows"
         mc:Ignorable="d"
 
         Height="600"
@@ -13,9 +12,64 @@
 
         Closed="ClosedHandler">
     <Grid Margin="8">
-        <TabControl ItemsSource="{Binding WorldOfWarcraftInstallation.ClientsForBinding, Mode=OneWay}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="8" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+            <CheckBox x:Name="showPrereleaseVersions" Margin="0,0,8,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Content="Show Prerelease Versions" IsChecked="{Binding ShowPrereleaseVersions, Mode=TwoWay}" />
+            <TextBox x:Name="searchFor" Width="200" VerticalAlignment="Center" Text="{Binding SearchFor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+        <TabControl Grid.Row="2" ItemsSource="{Binding AddOnManager.WorldOfWarcraftInstallation.ClientsForBinding, Mode=OneWay}" SelectedIndex="0">
             <TabControl.ContentTemplate>
                 <DataTemplate>
+                    <Grid Loaded="ClientTabLoadedHandler" Unloaded="ClientTabUnloadedHandler" DataContextChanged="ClientTabDataContextChangedHandler">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="addOnsList">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="8" Margin="0,0,0,2" Background="#20808080">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="64" />
+                                                    <ColumnDefinition Width="8" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Image Source="{Binding IconUrl, Mode=OneWay}" Width="64" Height="64" Stretch="UniformToFill" StretchDirection="Both" VerticalAlignment="Top" />
+                                                <StackPanel Grid.Column="2" Orientation="Vertical">
+                                                    <TextBlock FontSize="20" TextWrapping="Wrap" Visibility="{Binding Name, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}"  Text="{Binding Name, Mode=OneWay}" />
+                                                    <TextBlock FontSize="16" TextWrapping="Wrap" Visibility="{Binding AuthorName, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}"  Text="{Binding AuthorName, Mode=OneWay, StringFormat={}By {0}}" />
+                                                    <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Visibility="{Binding Description, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Text="{Binding Description, Mode=OneWay}" />
+                                                    <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                                        <StackPanel.Resources>
+                                                            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+                                                                <Setter Property="Margin" Value="0,0,8,0" />
+                                                                <Setter Property="Padding" Value="4,2" />
+                                                            </Style>
+                                                        </StackPanel.Resources>
+                                                        <Button Content="Install" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource FalseIsVisibleValueConverter}}" Click="InstallClickHandler" />
+                                                        <Button Content="Update" Visibility="{Binding IsUpdateAvailable, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" Click="UpdateClickHandler" />
+                                                        <Button Content="Uninstall" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" Click="UninstallClickHandler" />
+                                                        <Button Content="Visit Support Page" Visibility="{Binding SupportUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitSupportPageClickHandler" />
+                                                        <Button Content="Visit Add-On Page" Visibility="{Binding AddOnPageUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitAddOnPageClickHandler" />
+                                                        <Button Content="Donate" Visibility="{Binding DonationsUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="DonateClickHandler" />
+                                                        <Button Content="Visit Author Page" Visibility="{Binding AuthorPageUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitAuthorPageClickHandler" />
+                                                        <Button Content="Email Author" Visibility="{Binding AuthorEmail, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="EmailAddOnAuthorClickHandler" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
                 </DataTemplate>
             </TabControl.ContentTemplate>
             <TabControl.ItemTemplate>
