@@ -19,7 +19,7 @@ namespace OpenAddOnManager.Windows
 
         void CleanUpClientTab(Panel clientTabPanel)
         {
-            ((IDisposable)((ItemsControl)clientTabPanel.FindName("addOnsList")).ItemsSource)?.Dispose();
+            ((IDisposable)((ItemsControl)clientTabPanel.FindName("addOnsList"))?.ItemsSource)?.Dispose();
             ((IDisposable)clientTabPanel.Resources["clientAddOns"])?.Dispose();
             clientTabPanel.Resources.Remove("clientAddOns");
         }

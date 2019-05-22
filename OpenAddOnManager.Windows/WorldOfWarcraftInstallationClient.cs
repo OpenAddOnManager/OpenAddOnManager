@@ -14,13 +14,13 @@ namespace OpenAddOnManager.Windows
             Directory = directory;
             Installation = worldOfWarcraftInstallation;
             var rootExecutables = directory.GetFiles("*.exe");
-            var clientExecutable =
+            Executible =
                 rootExecutables.FirstOrDefault(rootExecutable => rootExecutable.Name.Equals("wow.exe", StringComparison.OrdinalIgnoreCase)) ??
                 rootExecutables.FirstOrDefault(rootExecutable => rootExecutable.Name.Equals("wowt.exe", StringComparison.OrdinalIgnoreCase)) ??
                 rootExecutables.FirstOrDefault(rootExecutable => rootExecutable.Name.Equals("wowb.exe", StringComparison.OrdinalIgnoreCase));
-            if (clientExecutable == null)
+            if (Executible == null)
                 throw new WorldOfWarcraftInstallationClientExecutableNotFoundException();
-            if (!Version.TryParse(FileVersionInfo.GetVersionInfo(clientExecutable.FullName).FileVersion, out var clientExecutableVersion))
+            if (!Version.TryParse(FileVersionInfo.GetVersionInfo(Executible.FullName).FileVersion, out var clientExecutableVersion))
                 throw new WorldOfWarcraftInstallationClientExecutableVersionFormatException();
         }
 
@@ -29,6 +29,8 @@ namespace OpenAddOnManager.Windows
         }
 
         public DirectoryInfo Directory { get; private set; }
+
+        public FileInfo Executible { get; }
 
         public IWorldOfWarcraftInstallation Installation { get; private set; }
 

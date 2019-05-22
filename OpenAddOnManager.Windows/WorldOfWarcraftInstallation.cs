@@ -35,7 +35,8 @@ namespace OpenAddOnManager.Windows
             clients = new SynchronizedObservableDictionary<string, IWorldOfWarcraftInstallationClient>();
             Clients = new ReadOnlySynchronizedObservableRangeDictionary<string, IWorldOfWarcraftInstallationClient>(clients);
             clientsForBinding = clients.ToActiveEnumerable();
-            ClientsForBinding = synchronizationContext == null ? clientsForBinding : clientsForBinding.SwitchContext(synchronizationContext);
+            sortedClientsForBinding = clientsForBinding.ActiveOrderBy(client => client.ReleaseChannelName);
+            ClientsForBinding = synchronizationContext == null ? sortedClientsForBinding : sortedClientsForBinding.SwitchContext(synchronizationContext);
 
             initializationCompleteTaskCompletionSource = new TaskCompletionSource<object>();
             InitializationComplete = initializationCompleteTaskCompletionSource.Task;
@@ -46,6 +47,7 @@ namespace OpenAddOnManager.Windows
         readonly IActiveEnumerable<IWorldOfWarcraftInstallationClient> clientsForBinding;
         FileSystemWatcher fileSystemWatcher;
         readonly TaskCompletionSource<object> initializationCompleteTaskCompletionSource;
+        readonly IActiveEnumerable<IWorldOfWarcraftInstallationClient> sortedClientsForBinding;
 
         Task AddClientsAsync() => Task.Run(() =>
         {
@@ -69,6 +71,7 @@ namespace OpenAddOnManager.Windows
             if (disposing)
             {
                 ClientsForBinding?.Dispose();
+                sortedClientsForBinding?.Dispose();
                 clientsForBinding?.Dispose();
                 fileSystemWatcher?.Dispose();
             }
@@ -86,9 +89,9 @@ namespace OpenAddOnManager.Windows
             foreach (var clientKey in clients.Keys.ToImmutableArray())
             {
                 var client = clients[clientKey];
-                var clientDirectory = client.Directory;
-                clientDirectory.Refresh();
-                if (!clientDirectory.Exists)
+                var clientExecutible = client.Executible;
+                clientExecutible.Refresh();
+                if (!clientExecutible.Exists)
                 {
                     clients.Remove(clientKey);
                     client.Dispose();
@@ -119,8 +122,9 @@ namespace OpenAddOnManager.Windows
             fileSystemWatcher.Deleted += FileSystemWatcherEventHandler;
             fileSystemWatcher.Error += FileSystemWatcherErrorHandler;
             fileSystemWatcher.Renamed += FileSystemWatcherEventHandler;
-            fileSystemWatcher.IncludeSubdirectories = false;
-            fileSystemWatcher.NotifyFilter = NotifyFilters.DirectoryName;
+            fileSystemWatcher.Filter = "*.exe";
+            fileSystemWatcher.IncludeSubdirectories = true;
+            fileSystemWatcher.NotifyFilter = NotifyFilters.FileName;
             fileSystemWatcher.EnableRaisingEvents = true;
         }
 
