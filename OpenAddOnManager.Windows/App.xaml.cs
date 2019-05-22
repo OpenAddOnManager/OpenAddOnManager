@@ -64,6 +64,17 @@ namespace OpenAddOnManager.Windows
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            var wnd = new Window
+            {
+                AllowsTransparency = true,
+                Height = 0,
+                Opacity = 0,
+                ShowInTaskbar = false,
+                Width = 0,
+                WindowStyle = WindowStyle.None
+            };
+            wnd.Show();
+            wnd.Hide();
             synchronizationContext = SynchronizationContext.Current;
             ThreadPool.QueueUserWorkItem(Initialize);
             base.OnStartup(e);
