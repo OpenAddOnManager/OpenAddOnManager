@@ -6,7 +6,7 @@
 
         "sourceUrl": "https://github.com/OpenAddOnManager/BlankAddOn.git",
 
-        "authorName": "CodeBleu",
+        "authorName": "Open Add-On Manager Team",
 
         "addOnPageUrl": "https://github.com/OpenAddOnManager/BlankAddOn",
         "supportUrl": "https://github.com/OpenAddOnManager/BlankAddOn/issues"
@@ -21,7 +21,7 @@
         "sourceBranch": "test",
         "isPrereleaseVersion": true,
 
-        "authorName": "CodeBleu",
+        "authorName": "Open Add-On Manager Team",
 
         "addOnPageUrl": "https://github.com/OpenAddOnManager/BlankAddOn",
         "supportUrl": "https://github.com/OpenAddOnManager/BlankAddOn/issues"
@@ -36,7 +36,7 @@
         "sourceUrl": "https://github.com/OpenAddOnManager/BlankAddOn.git",
         "sourceBranch": "ptr/master",
 
-        "authorName": "CodeBleu",
+        "authorName": "Open Add-On Manager Team",
 
         "addOnPageUrl": "https://github.com/OpenAddOnManager/BlankAddOn",
         "supportUrl": "https://github.com/OpenAddOnManager/BlankAddOn/issues"
@@ -52,7 +52,7 @@
         "sourceBranch": "ptr/test",
         "isPrereleaseVersion": true,
 
-        "authorName": "CodeBleu",
+        "authorName": "Open Add-On Manager Team",
 
         "addOnPageUrl": "https://github.com/OpenAddOnManager/BlankAddOn",
         "supportUrl": "https://github.com/OpenAddOnManager/BlankAddOn/issues"
@@ -67,7 +67,7 @@
         "sourceUrl": "https://github.com/OpenAddOnManager/BlankAddOn.git",
         "sourceBranch": "classic/master",
 
-        "authorName": "CodeBleu",
+        "authorName": "Open Add-On Manager Team",
 
         "addOnPageUrl": "https://github.com/OpenAddOnManager/BlankAddOn",
         "supportUrl": "https://github.com/OpenAddOnManager/BlankAddOn/issues"
@@ -83,9 +83,37 @@
         "sourceBranch": "classic/test",
         "isPrereleaseVersion": true,
 
-        "authorName": "CodeBleu",
+        "authorName": "Open Add-On Manager Team",
 
         "addOnPageUrl": "https://github.com/OpenAddOnManager/BlankAddOn",
         "supportUrl": "https://github.com/OpenAddOnManager/BlankAddOn/issues"
+    },
+
+    "911b3644-561f-4a64-aa8f-4fc373cd617e": {
+        "name": "Alamo Reeburth",
+        "description": "Alamo teechs ur frens 2 play DURID!",
+        "iconUrl": "https://raw.githubusercontent.com/BigBadBleuCheese/AlamoReeburth/master/alamobear.jpg",
+
+        "sourceUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth.git",
+
+        "authorName": "CodeBleu",
+
+        "addOnPageUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth",
+        "supportUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth/issues"
+    },
+
+    "576b6568-adea-4f7e-9fdd-877568191713": {
+        "name": "Alamo Reeburth",
+        "description": "Alamo teechs ur frens 2 play DURID!",
+        "iconUrl": "https://raw.githubusercontent.com/BigBadBleuCheese/AlamoReeburth/master/alamobear.jpg",
+
+        "sourceUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth.git",
+        "sourceBranch": "test",
+        "isPrereleaseVersion": true,
+
+        "authorName": "CodeBleu",
+
+        "addOnPageUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth",
+        "supportUrl": "https://github.com/BigBadBleuCheese/AlamoReeburth/issues"
     }
 }
