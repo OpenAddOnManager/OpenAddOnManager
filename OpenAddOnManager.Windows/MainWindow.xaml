@@ -3,6 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:oam="clr-namespace:OpenAddOnManager;assembly=OpenAddOnManager"
+        xmlns:oamw="clr-namespace:OpenAddOnManager.Windows"
         mc:Ignorable="d"
 
         Height="600"
@@ -37,11 +39,20 @@
                                         <Border Padding="8" Margin="0,0,0,2" Background="#20808080">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="64" />
+                                                    <ColumnDefinition Width="96" />
                                                     <ColumnDefinition Width="8" />
                                                     <ColumnDefinition Width="*" />
                                                 </Grid.ColumnDefinitions>
-                                                <Image Source="{Binding IconUrl, Mode=OneWay}" Width="64" Height="64" Stretch="UniformToFill" StretchDirection="Both" VerticalAlignment="Top" />
+                                                <Grid Width="96" Height="96">
+                                                    <Image Source="{Binding IconUrl, Mode=OneWay}" Stretch="UniformToFill" StretchDirection="Both" />
+                                                    <oamw:PrereleaseVersionDogEar Visibility="{Binding IsPrereleaseVersion, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" />
+                                                    <oamw:InstalledDogEar Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" />
+                                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="Bold" TextTrimming="CharacterEllipsis" Visibility="{Binding ActionState, Mode=OneWay, Converter={StaticResource NotEqualToIsVisibleValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Text="{Binding ActionState, Mode=OneWay}">
+                                                        <TextBlock.Effect>
+                                                            <DropShadowEffect Color="Black" ShadowDepth="3" BlurRadius="10" />
+                                                        </TextBlock.Effect>
+                                                    </TextBlock>
+                                                </Grid>
                                                 <StackPanel Grid.Column="2" Orientation="Vertical">
                                                     <TextBlock FontSize="20" TextWrapping="Wrap" Visibility="{Binding Name, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}"  Text="{Binding Name, Mode=OneWay}" />
                                                     <TextBlock FontSize="16" TextWrapping="Wrap" Visibility="{Binding AuthorName, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}"  Text="{Binding AuthorName, Mode=OneWay, StringFormat={}By {0}}" />
@@ -53,9 +64,9 @@
                                                                 <Setter Property="Padding" Value="4,2" />
                                                             </Style>
                                                         </StackPanel.Resources>
-                                                        <Button Content="Install" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource FalseIsVisibleValueConverter}}" Click="InstallClickHandler" />
-                                                        <Button Content="Update" Visibility="{Binding IsUpdateAvailable, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" Click="UpdateClickHandler" />
-                                                        <Button Content="Uninstall" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" Click="UninstallClickHandler" />
+                                                        <Button Content="Install" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource FalseIsVisibleValueConverter}}" IsEnabled="{Binding ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Click="InstallClickHandler" />
+                                                        <Button Content="Update" Visibility="{Binding IsUpdateAvailable, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" IsEnabled="{Binding ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Click="UpdateClickHandler" />
+                                                        <Button Content="Uninstall" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" IsEnabled="{Binding ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Click="UninstallClickHandler" />
                                                         <Button Content="Visit Support Page" Visibility="{Binding SupportUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitSupportPageClickHandler" />
                                                         <Button Content="Visit Add-On Page" Visibility="{Binding AddOnPageUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitAddOnPageClickHandler" />
                                                         <Button Content="Donate" Visibility="{Binding DonationsUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="DonateClickHandler" />

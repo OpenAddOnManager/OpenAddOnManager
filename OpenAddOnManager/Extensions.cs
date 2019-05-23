@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -21,6 +22,12 @@ namespace OpenAddOnManager
             foreach (var sourceFile in sourceDirectory.GetFiles("*.*", copyContentsEnumerationOptions))
                 copiedFiles.Add(sourceFile.CopyTo(Path.Combine(targetDirectory.FullName, sourceFile.Name), overwrite));
             return copiedFiles.ToImmutableArray();
+        }
+
+        public static IEnumerable<T> ToEnumerable<T>(this Memory<T> memory)
+        {
+            for (var i = 0; i < memory.Length; i++)
+                yield return memory.Span[i];
         }
     }
 }

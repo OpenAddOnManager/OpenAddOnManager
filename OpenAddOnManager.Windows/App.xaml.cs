@@ -1,5 +1,7 @@
+using Gear.NamedPipesSingleInstance;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -55,12 +57,37 @@ namespace OpenAddOnManager.Windows
                 Verb = "open"
             });
 
+        public static Task ShowMainWindowAsync() => OnUiThreadAsync(() =>
+        {
+            var mainWindow = Current.Windows.OfType<MainWindow>().FirstOrDefault();
+            if (mainWindow != null)
+            {
+                if (!mainWindow.IsVisible)
+                    mainWindow.Show();
+                else if (mainWindow.WindowState == WindowState.Minimized)
+                    mainWindow.WindowState = WindowState.Normal;
+                mainWindow.Activate();
+            }
+        });
+
+        public App() => singleInstance = new SingleInstance("openaddonmanager", SecondaryInstanceMessageReceivedHandler);
+
+        readonly SingleInstance singleInstance;
+
         async void Initialize(object state)
         {
+            if (!singleInstance.IsFirstInstance)
+            {
+                await singleInstance.SendMessageAsync("showmainwindow");
+                Environment.Exit(0);
+            }
+
             var worldOfWarcraftInstallation = new WorldOfWarcraftInstallation(synchronizationContext: synchronizationContext);
             var addOnManager = new AddOnManager(await Utilities.GetCommonStorageDirectoryAsync().ConfigureAwait(false), worldOfWarcraftInstallation, synchronizationContext);
             await OnUiThreadAsync(() => new MainWindow { DataContext = new MainWindowContext(addOnManager) }.Show());
         }
+
+        protected override void OnExit(ExitEventArgs e) => singleInstance.Dispose();
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -78,6 +105,16 @@ namespace OpenAddOnManager.Windows
             synchronizationContext = SynchronizationContext.Current;
             ThreadPool.QueueUserWorkItem(Initialize);
             base.OnStartup(e);
+        }
+
+        async Task SecondaryInstanceMessageReceivedHandler(object message)
+        {
+            switch (message)
+            {
+                case "showmainwindow":
+                    await ShowMainWindowAsync();
+                    break;
+            }
         }
     }
 }

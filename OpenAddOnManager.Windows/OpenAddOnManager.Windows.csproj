@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="InstalledDogEar.xaml" />
+    <None Remove="PrereleaseVersionDogEar.xaml" />
     <None Remove="Resources\ValueConverters.xaml" />
   </ItemGroup>
 
@@ -14,6 +16,7 @@
     <PackageReference Include="Gear.ActiveExpressions" Version="1.0.50" />
     <PackageReference Include="Gear.ActiveQuery" Version="1.0.18" />
     <PackageReference Include="Gear.Components" Version="1.0.107" />
+    <PackageReference Include="Gear.NamedPipesSingleInstance" Version="1.0.0" />
     <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.0.0" />
   </ItemGroup>
 
