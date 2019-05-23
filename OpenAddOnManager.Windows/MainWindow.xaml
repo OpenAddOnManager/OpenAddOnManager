@@ -23,7 +23,7 @@
             <CheckBox x:Name="showPrereleaseVersions" Margin="0,0,8,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Content="Show Prerelease Versions" IsChecked="{Binding ShowPrereleaseVersions, Mode=TwoWay}" />
             <TextBox x:Name="searchFor" Width="200" VerticalAlignment="Center" Text="{Binding SearchFor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
-        <TabControl Grid.Row="2" ItemsSource="{Binding AddOnManager.WorldOfWarcraftInstallation.ClientsForBinding, Mode=OneWay}" SelectedIndex="0">
+        <TabControl Grid.Row="2" ItemsSource="{Binding SortedClients, Mode=OneWay}" SelectedIndex="0">
             <TabControl.ContentTemplate>
                 <DataTemplate>
                     <Grid Loaded="ClientTabLoadedHandler" Unloaded="ClientTabUnloadedHandler" DataContextChanged="ClientTabDataContextChangedHandler">

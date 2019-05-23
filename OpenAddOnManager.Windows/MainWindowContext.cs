@@ -1,13 +1,24 @@
+using Gear.ActiveQuery;
 using Gear.Components;
 
 namespace OpenAddOnManager.Windows
 {
-    public class MainWindowContext : PropertyChangeNotifier
+    public class MainWindowContext : SyncDisposablePropertyChangeNotifier
     {
-        public MainWindowContext(AddOnManager addOnManager) => AddOnManager = addOnManager;
+        public MainWindowContext(AddOnManager addOnManager)
+        {
+            AddOnManager = addOnManager;
+            SortedClients = addOnManager.WorldOfWarcraftInstallation.Clients.ActiveOrderBy(client => client.ReleaseChannelName);
+        }
 
         string searchFor;
         bool showPrereleaseVersions;
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                SortedClients?.Dispose();
+        }
 
         public AddOnManager AddOnManager { get; }
 
@@ -22,5 +33,7 @@ namespace OpenAddOnManager.Windows
             get => showPrereleaseVersions;
             set => SetBackedProperty(ref showPrereleaseVersions, in value);
         }
+
+        public IActiveEnumerable<IWorldOfWarcraftInstallationClient> SortedClients { get; }
     }
 }

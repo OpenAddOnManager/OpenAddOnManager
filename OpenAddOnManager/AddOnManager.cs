@@ -1,11 +1,9 @@
 using Gear.ActiveQuery;
 using Gear.Components;
 using Newtonsoft.Json;
-using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -36,13 +34,15 @@ namespace OpenAddOnManager
             };
             WorldOfWarcraftInstallation = worldOfWarcraftInstallation;
             addOns = new SynchronizedObservableDictionary<Guid, AddOn>();
-            AddOns = new ReadOnlySynchronizedObservableRangeDictionary<Guid, AddOn>(addOns);
-            addOnsForBinding = addOns.ToActiveEnumerable();
-            AddOnsForBinding = synchronizationContext == null ? addOnsForBinding : addOnsForBinding.SwitchContext(synchronizationContext);
-            ManifestUrls = new ReadOnlyObservableCollection<Uri>(manifestUrls);
+            addOnsActiveEnumerable = addOns.ToActiveEnumerable();
+            ManifestUrls = new SynchronizedRangeObservableCollection<Uri>(DefaultManifestUrls);
+            AddOns = synchronizationContext == null ? addOnsActiveEnumerable : addOnsActiveEnumerable.SwitchContext(synchronizationContext);
             StorageDirectory = storageDirectory;
             if (StorageDirectory != null)
+            {
+                stateFile = new FileInfo(Path.Combine(StorageDirectory.FullName, "state.json"));
                 AddOnsDirectory = new DirectoryInfo(Path.Combine(StorageDirectory.FullName, "AddOnRepositories"));
+            }
 
             initializationCompleteTaskCompletionSource = new TaskCompletionSource<object>();
             InitializationComplete = initializationCompleteTaskCompletionSource.Task;
@@ -50,19 +50,19 @@ namespace OpenAddOnManager
         }
 
         readonly SynchronizedObservableDictionary<Guid, AddOn> addOns;
-        readonly IActiveEnumerable<AddOn> addOnsForBinding;
+        readonly IActiveEnumerable<AddOn> addOnsActiveEnumerable;
         readonly HttpClientHandler httpClientHandler;
         readonly TaskCompletionSource<object> initializationCompleteTaskCompletionSource;
-        readonly ObservableCollection<Uri> manifestUrls = new ObservableCollection<Uri>(DefaultManifestUrls);
-        readonly AsyncLock manifestUrlsAccess = new AsyncLock();
+        readonly FileInfo stateFile;
         Timer updateAvailableAddOnsTimer;
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                AddOnsForBinding?.Dispose();
-                addOnsForBinding?.Dispose();
+                ManifestUrls.GenericCollectionChanged -= ManifestUrlsGenericCollectionChangedHandler;
+                AddOns?.Dispose();
+                addOnsActiveEnumerable?.Dispose();
                 updateAvailableAddOnsTimer?.Dispose();
             }
         }
@@ -79,8 +79,22 @@ namespace OpenAddOnManager
         {
             try
             {
+                if (stateFile != null)
+                {
+                    stateFile.Refresh();
+                    if (stateFile.Exists)
+                    {
+                        AddOnManagerState addOnManagerState;
+                        using (var streamReader = File.OpenText(stateFile.FullName))
+                        using (var jsonReader = new JsonTextReader(streamReader))
+                            addOnManagerState = JsonSerializer.CreateDefault().Deserialize<AddOnManagerState>(jsonReader);
+                        ManifestUrls.Reset(addOnManagerState.ManifestUrls);
+                        ManifestUrls.GenericCollectionChanged += ManifestUrlsGenericCollectionChangedHandler;
+                    }
+                }
                 if (AddOnsDirectory != null)
                 {
+                    AddOnsDirectory.Refresh();
                     if (!AddOnsDirectory.Exists)
                         AddOnsDirectory.Create();
                     addOns.AddRange
@@ -101,48 +115,65 @@ namespace OpenAddOnManager
             }
         }
 
+        void ManifestUrlsGenericCollectionChangedHandler(object sender, INotifyGenericCollectionChangedEventArgs<Uri> e) => ThreadPool.QueueUserWorkItem(async state => await SaveStateAsync());
+
         void InitializeUpdateAvailableAddOnsTimer() => updateAvailableAddOnsTimer = new Timer(UpdateAvailableAddOnsTimerCallback, null, UpdateAvailableAddOnsTimerDuration, UpdateAvailableAddOnsTimerDuration);
+
+        async Task SaveStateAsync()
+        {
+            if (stateFile != null)
+                using (var streamWriter = File.CreateText(stateFile.FullName))
+                using (var jsonWriter = new JsonTextWriter(streamWriter))
+                    JsonSerializer.CreateDefault().Serialize(jsonWriter, new AddOnManagerState
+                    {
+                        ManifestUrls = (await ManifestUrls.GetAllAsync().ConfigureAwait(false)).ToList()
+                    });
+        }
 
         public Task UpdateAvailableAddOnsAsync() => Task.Run(async () =>
         {
-            IReadOnlyList<Uri> manifestUrls;
-            using (await manifestUrlsAccess.LockAsync().ConfigureAwait(false))
-                manifestUrls = this.manifestUrls.ToImmutableArray();
             var jsonSerializer = JsonSerializer.CreateDefault();
             using (var httpClient = CreateHttpClient())
-                foreach (var manifestUrl in manifestUrls)
-                    using (var responseStream = await httpClient.GetStreamAsync(manifestUrl).ConfigureAwait(false))
-                    using (var responseStreamReader = new StreamReader(responseStream))
-                    using (var responseJsonTextReader = new JsonTextReader(responseStreamReader))
+                foreach (var manifestUrl in await ManifestUrls.GetAllAsync().ConfigureAwait(false))
+                {
+                    try
                     {
-                        await responseJsonTextReader.ReadAsync().ConfigureAwait(false);
-                        if (responseJsonTextReader.TokenType != JsonToken.StartObject)
-                            throw new FormatException();
-                        while ((await responseJsonTextReader.ReadAsync().ConfigureAwait(false)) && responseJsonTextReader.TokenType == JsonToken.PropertyName)
+                        using (var responseStream = await httpClient.GetStreamAsync(manifestUrl).ConfigureAwait(false))
+                        using (var responseStreamReader = new StreamReader(responseStream))
+                        using (var responseJsonTextReader = new JsonTextReader(responseStreamReader))
                         {
-                            if (!Guid.TryParse((string)responseJsonTextReader.Value, out var addOnsKey))
-                                throw new FormatException();
                             await responseJsonTextReader.ReadAsync().ConfigureAwait(false);
-                            var entry = jsonSerializer.Deserialize<AddOnManifestEntry>(responseJsonTextReader);
-                            if (addOns.TryGetValue(addOnsKey, out var addOn))
-                                await addOn.UpdatePropertiesFromManifestEntryAsync(entry).ConfigureAwait(false);
-                            else
-                                addOns.Add(addOnsKey, new AddOn(this, addOnsKey, entry));
+                            if (responseJsonTextReader.TokenType != JsonToken.StartObject)
+                                throw new FormatException();
+                            while ((await responseJsonTextReader.ReadAsync().ConfigureAwait(false)) && responseJsonTextReader.TokenType == JsonToken.PropertyName)
+                            {
+                                if (!Guid.TryParse((string)responseJsonTextReader.Value, out var addOnsKey))
+                                    throw new FormatException();
+                                await responseJsonTextReader.ReadAsync().ConfigureAwait(false);
+                                var entry = jsonSerializer.Deserialize<AddOnManifestEntry>(responseJsonTextReader);
+                                if (addOns.TryGetValue(addOnsKey, out var addOn))
+                                    await addOn.UpdatePropertiesFromManifestEntryAsync(entry).ConfigureAwait(false);
+                                else
+                                    addOns.Add(addOnsKey, new AddOn(this, addOnsKey, entry));
+                            }
                         }
                     }
+                    catch (HttpRequestException)
+                    {
+                        // TODO: tell user manifest is bad
+                    }
+                }
         });
 
         async void UpdateAvailableAddOnsTimerCallback(object state) => await UpdateAvailableAddOnsAsync().ConfigureAwait(false);
 
-        public ReadOnlySynchronizedObservableRangeDictionary<Guid, AddOn> AddOns { get; }
+        public IActiveEnumerable<AddOn> AddOns { get; }
 
         public DirectoryInfo AddOnsDirectory { get; }
 
-        public IActiveEnumerable<AddOn> AddOnsForBinding { get; }
-
         public Task InitializationComplete { get; }
 
-        public ReadOnlyObservableCollection<Uri> ManifestUrls { get; }
+        public SynchronizedRangeObservableCollection<Uri> ManifestUrls { get; }
 
         public DirectoryInfo StorageDirectory { get; }
 

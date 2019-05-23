@@ -13,6 +13,7 @@ namespace OpenAddOnManager.Windows
         {
             var worldOfWarcraftInstallation = Context.AddOnManager?.WorldOfWarcraftInstallation;
             Context.AddOnManager?.Dispose();
+            Context.Dispose();
             (worldOfWarcraftInstallation as IDisposable)?.Dispose();
             Application.Current.Shutdown();
         }
@@ -42,7 +43,7 @@ namespace OpenAddOnManager.Windows
         void InitializeClientTab(Panel clientTabPanel)
         {
             var worldOfWarcraftInstallationClient = (WorldOfWarcraftInstallationClient)clientTabPanel.DataContext;
-            var clientAddOns = Context.AddOnManager.AddOnsForBinding.ActiveWhere
+            var clientAddOns = Context.AddOnManager.AddOns.ActiveWhere
             (
                 addOn
                 =>

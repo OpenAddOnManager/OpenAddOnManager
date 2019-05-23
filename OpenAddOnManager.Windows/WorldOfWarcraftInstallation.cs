@@ -32,32 +32,30 @@ namespace OpenAddOnManager.Windows
             }
 
             Directory = directory;
-            clients = new SynchronizedObservableDictionary<string, IWorldOfWarcraftInstallationClient>();
-            Clients = new ReadOnlySynchronizedObservableRangeDictionary<string, IWorldOfWarcraftInstallationClient>(clients);
-            clientsForBinding = clients.ToActiveEnumerable();
-            sortedClientsForBinding = clientsForBinding.ActiveOrderBy(client => client.ReleaseChannelName);
-            ClientsForBinding = synchronizationContext == null ? sortedClientsForBinding : sortedClientsForBinding.SwitchContext(synchronizationContext);
+            clientByReleaseChannelId = new SynchronizedObservableDictionary<string, IWorldOfWarcraftInstallationClient>();
+            ClientByReleaseChannelId = new ReadOnlySynchronizedObservableRangeDictionary<string, IWorldOfWarcraftInstallationClient>(clientByReleaseChannelId);
+            clientsActiveEnumerable = clientByReleaseChannelId.ToActiveEnumerable();
+            Clients = synchronizationContext == null ? clientsActiveEnumerable : clientsActiveEnumerable.SwitchContext(synchronizationContext);
 
             initializationCompleteTaskCompletionSource = new TaskCompletionSource<object>();
             InitializationComplete = initializationCompleteTaskCompletionSource.Task;
             ThreadPool.QueueUserWorkItem(Initialize);
         }
 
-        readonly SynchronizedObservableDictionary<string, IWorldOfWarcraftInstallationClient> clients;
-        readonly IActiveEnumerable<IWorldOfWarcraftInstallationClient> clientsForBinding;
+        readonly SynchronizedObservableDictionary<string, IWorldOfWarcraftInstallationClient> clientByReleaseChannelId;
+        readonly IActiveEnumerable<IWorldOfWarcraftInstallationClient> clientsActiveEnumerable;
         FileSystemWatcher fileSystemWatcher;
         readonly TaskCompletionSource<object> initializationCompleteTaskCompletionSource;
-        readonly IActiveEnumerable<IWorldOfWarcraftInstallationClient> sortedClientsForBinding;
 
         Task AddClientsAsync() => Task.Run(() =>
         {
-            foreach (var subDirectory in Directory.GetDirectories().Where(subDirectory => subDirectory.Name.StartsWith("_") && subDirectory.Name.EndsWith("_") && !clients.ContainsKey(subDirectory.Name)))
+            foreach (var subDirectory in Directory.GetDirectories().Where(subDirectory => subDirectory.Name.StartsWith("_") && subDirectory.Name.EndsWith("_") && !clientByReleaseChannelId.ContainsKey(subDirectory.Name)))
             {
                 WorldOfWarcraftInstallationClient client = null;
                 try
                 {
                     client = new WorldOfWarcraftInstallationClient(this, subDirectory);
-                    clients.Add(subDirectory.Name, client);
+                    clientByReleaseChannelId.Add(subDirectory.Name, client);
                 }
                 catch
                 {
@@ -70,9 +68,8 @@ namespace OpenAddOnManager.Windows
         {
             if (disposing)
             {
-                ClientsForBinding?.Dispose();
-                sortedClientsForBinding?.Dispose();
-                clientsForBinding?.Dispose();
+                Clients?.Dispose();
+                clientsActiveEnumerable?.Dispose();
                 fileSystemWatcher?.Dispose();
             }
         }
@@ -86,14 +83,14 @@ namespace OpenAddOnManager.Windows
 
         async void FileSystemWatcherEventHandler(object sender, FileSystemEventArgs e)
         {
-            foreach (var clientKey in clients.Keys.ToImmutableArray())
+            foreach (var clientKey in clientByReleaseChannelId.Keys.ToImmutableArray())
             {
-                var client = clients[clientKey];
+                var client = clientByReleaseChannelId[clientKey];
                 var clientExecutible = client.Executible;
                 clientExecutible.Refresh();
                 if (!clientExecutible.Exists)
                 {
-                    clients.Remove(clientKey);
+                    clientByReleaseChannelId.Remove(clientKey);
                     client.Dispose();
                 }
             }
@@ -128,9 +125,9 @@ namespace OpenAddOnManager.Windows
             fileSystemWatcher.EnableRaisingEvents = true;
         }
 
-        public IReadOnlyDictionary<string, IWorldOfWarcraftInstallationClient> Clients { get; private set; }
+        public IReadOnlyDictionary<string, IWorldOfWarcraftInstallationClient> ClientByReleaseChannelId { get; private set; }
 
-        public IActiveEnumerable<IWorldOfWarcraftInstallationClient> ClientsForBinding { get; private set; }
+        public IActiveEnumerable<IWorldOfWarcraftInstallationClient> Clients { get; private set; }
 
         public DirectoryInfo Directory { get; private set; }
 

@@ -52,7 +52,7 @@ namespace OpenAddOnManager
                 sourceUrl = state.SourceUrl;
                 supportUrl = state.SupportUrl;
                 var worldOfWarcraftInstallation = this.addOnManager.WorldOfWarcraftInstallation;
-                if (worldOfWarcraftInstallation != null && worldOfWarcraftInstallation.Clients.TryGetValue(releaseChannelId, out var client))
+                if (worldOfWarcraftInstallation != null && worldOfWarcraftInstallation.ClientByReleaseChannelId.TryGetValue(releaseChannelId, out var client))
                 {
                     var clientPath = client.Directory.FullName;
                     installedFiles = state.InstalledFiles?.Select(installedFile => new FileInfo(Path.Combine(clientPath, installedFile))).ToImmutableArray();
@@ -186,7 +186,7 @@ namespace OpenAddOnManager
             if (worldOfWacraftInstallation == null)
                 throw new WorldOfWarcraftInstallationUnavailableException();
             await worldOfWacraftInstallation.InitializationComplete.ConfigureAwait(false);
-            if (!worldOfWacraftInstallation.Clients.TryGetValue(releaseChannelId, out var client))
+            if (!worldOfWacraftInstallation.ClientByReleaseChannelId.TryGetValue(releaseChannelId, out var client))
                 throw new WorldOfWarcraftInstallationClientUnavailableException(releaseChannelId);
             if (IsLicensed && !isLicenseAgreed)
                 throw new UserHasNotAgreedToLicenseException();
@@ -288,7 +288,7 @@ namespace OpenAddOnManager
                         Description = description,
                         DonationsUrl = donationsUrl,
                         IconUrl = iconUrl,
-                        InstalledFiles = installedFiles?.Select(installedFile => installedFile.FullName.Substring(addOnManager.WorldOfWarcraftInstallation.Clients[releaseChannelId].Directory.FullName.Length + 1)).ToList(),
+                        InstalledFiles = installedFiles?.Select(installedFile => installedFile.FullName.Substring(addOnManager.WorldOfWarcraftInstallation.ClientByReleaseChannelId[releaseChannelId].Directory.FullName.Length + 1)).ToList(),
                         InstalledSha = installedSha,
                         IsLicenseAgreed = isLicenseAgreed,
                         IsPrereleaseVersion = isPrereleaseVersion,
@@ -314,7 +314,7 @@ namespace OpenAddOnManager
                 if (worldOfWacraftInstallation == null)
                     throw new WorldOfWarcraftInstallationUnavailableException();
                 await worldOfWacraftInstallation.InitializationComplete.ConfigureAwait(false);
-                if (!worldOfWacraftInstallation.Clients.TryGetValue(releaseChannelId, out var client))
+                if (!worldOfWacraftInstallation.ClientByReleaseChannelId.TryGetValue(releaseChannelId, out var client))
                     throw new WorldOfWarcraftInstallationClientUnavailableException(releaseChannelId);
                 var clientInterfaceDirectory = new DirectoryInfo(Path.Combine(client.Directory.FullName, "Interface"));
                 if (!clientInterfaceDirectory.Exists)
