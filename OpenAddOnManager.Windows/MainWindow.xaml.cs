@@ -74,8 +74,10 @@ namespace OpenAddOnManager.Windows
         {
             var addOn = (AddOn)((Button)sender).DataContext;
             await addOn.DownloadAsync();
-            addOn.AgreeToLicense();
-            await addOn.InstallAsync();
+            if (addOn.IsLicensed && !addOn.IsLicenseAgreed)
+                AddOnLicenseDialog.Present(this, addOn);
+            if (!addOn.IsLicensed || addOn.IsLicenseAgreed)
+                await addOn.InstallAsync();
         }
 
         async void UninstallClickHandler(object sender, RoutedEventArgs e)
