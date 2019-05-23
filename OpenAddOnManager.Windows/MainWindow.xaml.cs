@@ -42,7 +42,30 @@ namespace OpenAddOnManager.Windows
         void InitializeClientTab(Panel clientTabPanel)
         {
             var worldOfWarcraftInstallationClient = (WorldOfWarcraftInstallationClient)clientTabPanel.DataContext;
-            var clientAddOns = Context.AddOnManager.AddOnsForBinding.ActiveWhere(addOn => addOn.ReleaseChannelId == worldOfWarcraftInstallationClient.ReleaseChannelId && (!addOn.IsPrereleaseVersion || Context.ShowPrereleaseVersions) && (string.IsNullOrWhiteSpace(Context.SearchFor) || addOn.AddOnPageUrl.ToString().Contains(Context.SearchFor, StringComparison.OrdinalIgnoreCase)));
+            var clientAddOns = Context.AddOnManager.AddOnsForBinding.ActiveWhere
+            (
+                addOn
+                =>
+                addOn.ReleaseChannelId == worldOfWarcraftInstallationClient.ReleaseChannelId
+                &&
+                (
+                    addOn.IsInstalled
+                    ||
+                    !addOn.IsPrereleaseVersion
+                    ||
+                    Context.ShowPrereleaseVersions
+                )
+                &&
+                (
+                    string.IsNullOrWhiteSpace(Context.SearchFor)
+                    ||
+                    addOn.AuthorName.Contains(Context.SearchFor.Trim(), StringComparison.OrdinalIgnoreCase)
+                    ||
+                    addOn.Description.Contains(Context.SearchFor.Trim(), StringComparison.OrdinalIgnoreCase)
+                    ||
+                    addOn.Name.Contains(Context.SearchFor.Trim(), StringComparison.OrdinalIgnoreCase)
+                )
+            );
             clientTabPanel.Resources.Add("clientAddOns", clientAddOns);
             ((ItemsControl)clientTabPanel.FindName("addOnsList")).ItemsSource = clientAddOns.ActiveOrderBy(new ActiveOrderingKeySelector<AddOn>(addOn => addOn.IsInstalled, true), new ActiveOrderingKeySelector<AddOn>(addOn => addOn.Name), new ActiveOrderingKeySelector<AddOn>(addOn => addOn.IsPrereleaseVersion));
         }
