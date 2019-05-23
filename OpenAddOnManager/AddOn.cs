@@ -41,6 +41,7 @@ namespace OpenAddOnManager
                 description = state.Description;
                 donationsUrl = state.DonationsUrl;
                 iconUrl = state.IconUrl;
+                isLicenseAgreed = state.IsLicenseAgreed;
                 isPrereleaseVersion = state.IsPrereleaseVersion;
                 license = state.License;
                 name = state.Name;
@@ -289,6 +290,7 @@ namespace OpenAddOnManager
                         IconUrl = iconUrl,
                         InstalledFiles = installedFiles?.Select(installedFile => installedFile.FullName.Substring(addOnManager.WorldOfWarcraftInstallation.Clients[releaseChannelId].Directory.FullName.Length + 1)).ToList(),
                         InstalledSha = installedSha,
+                        IsLicenseAgreed = isLicenseAgreed,
                         IsPrereleaseVersion = isPrereleaseVersion,
                         License = license,
                         Name = name,
