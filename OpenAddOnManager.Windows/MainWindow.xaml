@@ -25,6 +25,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+        <Image Grid.RowSpan="4" Grid.ColumnSpan="2" Source="http://www.manaobscura.com/wp-content/gallery/wow-bfa-alpha/WoWScrnShot_031918_195451.jpg" Stretch="UniformToFill" StretchDirection="Both" />
+        <Border Grid.RowSpan="3" Grid.ColumnSpan="2" Background="Black" Opacity="0.5" />
         <StackPanel Margin="8,8,0,0" VerticalAlignment="Center" Orientation="Horizontal">
             <md:PackIcon Kind="Search" Width="24" Height="24" />
             <TextBox Width="200" VerticalAlignment="Center" md:HintAssist.Hint="Search for Add-Ons" Text="{Binding SearchFor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -33,25 +35,28 @@
         <StackPanel Grid.Column="1" Margin="0,8,8,0" VerticalAlignment="Center" Orientation="Horizontal">
             <Button IsEnabled="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.Idle}}" Click="RefreshListingsClickHandler">Refresh Listings</Button>
         </StackPanel>
-        <ItemsControl Grid.Row="2" Grid.ColumnSpan="2" ItemsSource="{Binding SortedClients, Mode=OneWay}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <RadioButton GroupName="ClientTabs" Style="{StaticResource MaterialDesignTabRadioButton}" Content="{Binding ReleaseChannelName, Mode=OneWay}" Checked="ClientTabCheckedHandler">
-                        <RadioButton.IsChecked>
-                            <MultiBinding Mode="OneWay" Converter="{StaticResource EqualToEachOtherMultiValueConverter}">
-                                <Binding Mode="OneWay" />
-                                <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}" Path="DataContext.SelectedClient" Mode="OneWay" />
-                            </MultiBinding>
-                        </RadioButton.IsChecked>
-                    </RadioButton>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <Grid Grid.Row="2" Grid.ColumnSpan="2">
+            <Border VerticalAlignment="Bottom" Background="White" Height="2" Opacity="0.5" />
+            <ItemsControl ItemsSource="{Binding SortedClients, Mode=OneWay}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <RadioButton GroupName="ClientTabs" Style="{StaticResource MaterialDesignTabRadioButton}" Content="{Binding ReleaseChannelName, Mode=OneWay}" Checked="ClientTabCheckedHandler">
+                            <RadioButton.IsChecked>
+                                <MultiBinding Mode="OneWay" Converter="{StaticResource EqualToEachOtherMultiValueConverter}">
+                                    <Binding Mode="OneWay" />
+                                    <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}" Path="DataContext.SelectedClient" Mode="OneWay" />
+                                </MultiBinding>
+                            </RadioButton.IsChecked>
+                        </RadioButton>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
         <ItemsControl Grid.Row="3" Grid.ColumnSpan="2" ItemsSource="{Binding SortedClients, Mode=OneWay}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
