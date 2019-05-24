@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenAddOnManager.Exceptions;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace OpenAddOnManager.Windows.Tests
@@ -41,7 +42,7 @@ namespace OpenAddOnManager.Windows.Tests
             using (var manager = new AddOnManager(testStorageDirectory, installation))
             {
                 await manager.InitializationComplete;
-                var blankAddOn = manager.AddOns[blankAddOnKey];
+                var blankAddOn = manager.AddOns.First(addOn => addOn.Key == blankAddOnKey);
                 Assert.IsFalse(blankAddOn.IsDownloaded);
                 Assert.IsFalse(blankAddOn.IsLicensed);
                 await blankAddOn.DownloadAsync();
@@ -71,7 +72,7 @@ namespace OpenAddOnManager.Windows.Tests
                 using (var manager = new AddOnManager(testStorageDirectory, installation))
                 {
                     await manager.InitializationComplete;
-                    var blankAddOn = manager.AddOns[blankAddOnKey];
+                    var blankAddOn = manager.AddOns.First(addOn => addOn.Key == blankAddOnKey);
                     Assert.IsFalse(blankAddOn.IsDownloaded);
                     Assert.IsFalse(blankAddOn.IsLicensed);
                     await blankAddOn.DownloadAsync();

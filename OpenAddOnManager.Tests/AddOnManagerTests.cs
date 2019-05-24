@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace OpenAddOnManager.Tests
@@ -48,12 +49,12 @@ namespace OpenAddOnManager.Tests
             using (var manager = new AddOnManager(testStorageDirectory, null))
             {
                 await manager.InitializationComplete;
-                Assert.IsTrue(await manager.AddOns[blankAddOnKey].DownloadAsync());
+                Assert.IsTrue(await manager.AddOns.First(addOn => addOn.Key == blankAddOnKey).DownloadAsync());
             }
             using (var manager = new AddOnManager(testStorageDirectory, null))
             {
                 await manager.InitializationComplete;
-                var blankAddOn = manager.AddOns[blankAddOnKey];
+                var blankAddOn = manager.AddOns.First(addOn => addOn.Key == blankAddOnKey);
                 Assert.IsTrue(blankAddOn.IsDownloaded);
                 await blankAddOn.DeleteAsync();
             }
