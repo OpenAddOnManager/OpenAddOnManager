@@ -1,6 +1,9 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vc="clr-namespace:OpenAddOnManager.Windows.ValueConverters">
+    <vc:EqualToEachOtherIsVisibleMultiValueConverter x:Key="EqualToEachOtherIsVisibleMultiValueConverter" />
+    <vc:EqualToEachOtherMultiValueConverter x:Key="EqualToEachOtherMultiValueConverter" />
+    <vc:EqualToIsVisibleValueConverter x:Key="EqualToIsVisibleValueConverter" />
     <vc:EqualToValueConverter x:Key="EqualToValueConverter" />
     <vc:FalseIsVisibleValueConverter x:Key="FalseIsVisibleValueConverter" />
     <vc:NotEqualToIsVisibleValueConverter x:Key="NotEqualToIsVisibleValueConverter" />

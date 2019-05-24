@@ -5,30 +5,70 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:oam="clr-namespace:OpenAddOnManager;assembly=OpenAddOnManager"
         xmlns:oamw="clr-namespace:OpenAddOnManager.Windows"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
 
-        Height="600"
+        Height="750"
         Title="Open Add-On Manager"
-        Width="800"
+        Width="1000"
         WindowStartupLocation="CenterScreen"
 
         Closed="ClosedHandler">
-    <Grid Margin="8">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="8" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-            <CheckBox x:Name="showPrereleaseVersions" Margin="0,0,8,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Content="Show Prerelease Versions" IsChecked="{Binding ShowPrereleaseVersions, Mode=TwoWay}" />
-            <TextBox x:Name="searchFor" Width="200" VerticalAlignment="Center" Text="{Binding SearchFor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <StackPanel Margin="8,8,0,0" VerticalAlignment="Center" Orientation="Horizontal">
+            <md:PackIcon Kind="Search" Width="24" Height="24" />
+            <TextBox Width="200" VerticalAlignment="Center" md:HintAssist.Hint="Search for Add-Ons" Text="{Binding SearchFor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <CheckBox Margin="8,0,0,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Content="Show Prerelease Versions" IsChecked="{Binding ShowPrereleaseVersions, Mode=TwoWay}" />
         </StackPanel>
-        <TabControl Grid.Row="2" ItemsSource="{Binding SortedClients, Mode=OneWay}" SelectedIndex="0">
-            <TabControl.ContentTemplate>
+        <StackPanel Grid.Column="1" Margin="0,8,8,0" VerticalAlignment="Center" Orientation="Horizontal">
+            <Button IsEnabled="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.Idle}}" Click="RefreshListingsClickHandler">Refresh Listings</Button>
+        </StackPanel>
+        <ItemsControl Grid.Row="2" Grid.ColumnSpan="2" ItemsSource="{Binding SortedClients, Mode=OneWay}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Grid Loaded="ClientTabLoadedHandler" Unloaded="ClientTabUnloadedHandler" DataContextChanged="ClientTabDataContextChangedHandler">
+                    <RadioButton GroupName="ClientTabs" Style="{StaticResource MaterialDesignTabRadioButton}" Content="{Binding ReleaseChannelName, Mode=OneWay}" Checked="ClientTabCheckedHandler">
+                        <RadioButton.IsChecked>
+                            <MultiBinding Mode="OneWay" Converter="{StaticResource EqualToEachOtherMultiValueConverter}">
+                                <Binding Mode="OneWay" />
+                                <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}" Path="DataContext.SelectedClient" Mode="OneWay" />
+                            </MultiBinding>
+                        </RadioButton.IsChecked>
+                    </RadioButton>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <ItemsControl Grid.Row="3" Grid.ColumnSpan="2" ItemsSource="{Binding SortedClients, Mode=OneWay}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid Loaded="ClientTabLoadedHandler" Unloaded="ClientTabUnloadedHandler">
+                        <Grid.Visibility>
+                            <MultiBinding Mode="OneWay" Converter="{StaticResource EqualToEachOtherIsVisibleMultiValueConverter}">
+                                <Binding Mode="OneWay" />
+                                <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}" Path="DataContext.SelectedClient" Mode="OneWay" />
+                            </MultiBinding>
+                        </Grid.Visibility>
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl x:Name="addOnsList">
+                            <ItemsControl x:Name="addOnsList" Margin="0,8,0,0">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <VirtualizingStackPanel Orientation="Vertical" />
@@ -36,7 +76,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Padding="8" Margin="0,0,0,2" Background="#20808080">
+                                        <GroupBox Header="{Binding Name, Mode=OneWay}" Style="{DynamicResource MaterialDesignCardGroupBox}" Margin="8,0,8,8">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="96" />
@@ -54,19 +94,23 @@
                                                     </TextBlock>
                                                 </Grid>
                                                 <StackPanel Grid.Column="2" Orientation="Vertical">
-                                                    <TextBlock FontSize="20" TextWrapping="Wrap" Visibility="{Binding Name, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}"  Text="{Binding Name, Mode=OneWay}" />
-                                                    <TextBlock FontSize="16" TextWrapping="Wrap" Visibility="{Binding AuthorName, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}"  Text="{Binding AuthorName, Mode=OneWay, StringFormat={}By {0}}" />
+                                                    <TextBlock Style="{StaticResource MaterialDesignSubheadingTextBlock}" TextWrapping="Wrap" Visibility="{Binding AuthorName, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}"  Text="{Binding AuthorName, Mode=OneWay, StringFormat={}By {0}}" />
                                                     <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Visibility="{Binding Description, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Text="{Binding Description, Mode=OneWay}" />
                                                     <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
                                                         <StackPanel.Resources>
                                                             <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
                                                                 <Setter Property="Margin" Value="0,0,8,0" />
-                                                                <Setter Property="Padding" Value="4,2" />
                                                             </Style>
                                                         </StackPanel.Resources>
-                                                        <Button Content="Install" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource FalseIsVisibleValueConverter}}" IsEnabled="{Binding ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Click="InstallClickHandler" />
-                                                        <Button Content="Update" Visibility="{Binding IsUpdateAvailable, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" IsEnabled="{Binding ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Click="UpdateClickHandler" />
-                                                        <Button Content="Uninstall" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" IsEnabled="{Binding ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Click="UninstallClickHandler" />
+                                                        <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniButton}" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource FalseIsVisibleValueConverter}}" IsEnabled="{Binding ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Click="InstallClickHandler">
+                                                            <md:PackIcon Kind="Download" Width="24" Height="24" />
+                                                        </Button>
+                                                        <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Visibility="{Binding IsUpdateAvailable, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" IsEnabled="{Binding ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Click="UpdateClickHandler">
+                                                            <md:PackIcon Kind="Update" Width="24" Height="24" />
+                                                        </Button>
+                                                        <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniDarkButton}" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" IsEnabled="{Binding ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Click="UninstallClickHandler">
+                                                            <md:PackIcon Kind="Delete" Width="24" Height="24" />
+                                                        </Button>
                                                         <Button Content="Visit Support Page" Visibility="{Binding SupportUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitSupportPageClickHandler" />
                                                         <Button Content="Visit Add-On Page" Visibility="{Binding AddOnPageUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitAddOnPageClickHandler" />
                                                         <Button Content="Donate" Visibility="{Binding DonationsUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="DonateClickHandler" />
@@ -75,19 +119,15 @@
                                                     </StackPanel>
                                                 </StackPanel>
                                             </Grid>
-                                        </Border>
+                                        </GroupBox>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
                     </Grid>
                 </DataTemplate>
-            </TabControl.ContentTemplate>
-            <TabControl.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding ReleaseChannelName, Mode=OneWay}" />
-                </DataTemplate>
-            </TabControl.ItemTemplate>
-        </TabControl>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <md:DialogHost Grid.RowSpan="4" Grid.ColumnSpan="2" />
     </Grid>
 </Window>

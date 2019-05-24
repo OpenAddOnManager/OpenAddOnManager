@@ -1,4 +1,5 @@
 using Gear.ActiveQuery;
+using MaterialDesignThemes.Wpf;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,12 +26,7 @@ namespace OpenAddOnManager.Windows
             clientTabPanel.Resources.Remove("clientAddOns");
         }
 
-        void ClientTabDataContextChangedHandler(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            var clientTabPanel = (Panel)sender;
-            CleanUpClientTab(clientTabPanel);
-            InitializeClientTab(clientTabPanel);
-        }
+        void ClientTabCheckedHandler(object sender, RoutedEventArgs e) => Context.SelectedClient = (IWorldOfWarcraftInstallationClient)((RadioButton)sender).DataContext;
 
         void ClientTabLoadedHandler(object sender, RoutedEventArgs e) => InitializeClientTab((Panel)sender);
 
@@ -68,18 +64,20 @@ namespace OpenAddOnManager.Windows
                 )
             );
             clientTabPanel.Resources.Add("clientAddOns", clientAddOns);
-            ((ItemsControl)clientTabPanel.FindName("addOnsList")).ItemsSource = clientAddOns.ActiveOrderBy(new ActiveOrderingKeySelector<AddOn>(addOn => addOn.IsInstalled, true), new ActiveOrderingKeySelector<AddOn>(addOn => addOn.Name), new ActiveOrderingKeySelector<AddOn>(addOn => addOn.IsPrereleaseVersion));
+            ((ItemsControl)clientTabPanel.FindName("addOnsList")).ItemsSource = clientAddOns.ActiveOrderBy(new ActiveOrderingKeySelector<AddOn>(addOn => addOn.IsUpdateAvailable, true), new ActiveOrderingKeySelector<AddOn>(addOn => addOn.IsInstalled, true), new ActiveOrderingKeySelector<AddOn>(addOn => addOn.Name), new ActiveOrderingKeySelector<AddOn>(addOn => addOn.IsPrereleaseVersion));
         }
 
         async void InstallClickHandler(object sender, RoutedEventArgs e)
         {
             var addOn = (AddOn)((Button)sender).DataContext;
             await addOn.DownloadAsync();
-            if (addOn.IsLicensed && !addOn.IsLicenseAgreed)
-                AddOnLicenseDialog.Present(this, addOn);
+            if (addOn.IsLicensed && !addOn.IsLicenseAgreed && (bool)await DialogHost.Show(new AddOnLicenseDialog { DataContext = addOn }))
+                addOn.AgreeToLicense();
             if (!addOn.IsLicensed || addOn.IsLicenseAgreed)
                 await addOn.InstallAsync();
         }
+
+        async void RefreshListingsClickHandler(object sender, RoutedEventArgs e) => await Context.AddOnManager.UpdateAvailableAddOnsAsync();
 
         async void UninstallClickHandler(object sender, RoutedEventArgs e)
         {
