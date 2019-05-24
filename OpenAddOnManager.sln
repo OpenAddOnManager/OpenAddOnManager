@@ -25,8 +25,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenAddOnManager.Windows.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenAddOnManager.Tests", "OpenAddOnManager.Tests\OpenAddOnManager.Tests.csproj", "{2C6021DD-2F66-447B-A9CC-CC03DE68A48F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gear.NamedPipesSingleInstance", "..\Gear\Gear.NamedPipesSingleInstance\Gear.NamedPipesSingleInstance.csproj", "{890F8140-58C2-402B-9313-1F2F44481A41}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,10 +47,6 @@ Global
 		{2C6021DD-2F66-447B-A9CC-CC03DE68A48F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C6021DD-2F66-447B-A9CC-CC03DE68A48F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C6021DD-2F66-447B-A9CC-CC03DE68A48F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{890F8140-58C2-402B-9313-1F2F44481A41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{890F8140-58C2-402B-9313-1F2F44481A41}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{890F8140-58C2-402B-9313-1F2F44481A41}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{890F8140-58C2-402B-9313-1F2F44481A41}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
