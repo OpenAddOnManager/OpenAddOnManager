@@ -17,7 +17,7 @@ namespace OpenAddOnManager
 {
     public class AddOnManager : SyncDisposablePropertyChangeNotifier
     {
-        static readonly TimeSpan never = TimeSpan.FromMilliseconds(0);
+        static readonly TimeSpan never = TimeSpan.FromMilliseconds(-1);
 
         public static IReadOnlyList<Uri> DefaultManifestUrls { get; } = new Uri[]
         {
