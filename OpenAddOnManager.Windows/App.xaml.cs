@@ -1,4 +1,6 @@
 using Gear.NamedPipesSingleInstance;
+using MaterialDesignColors;
+using MaterialDesignThemes.Wpf;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -10,7 +12,9 @@ namespace OpenAddOnManager.Windows
 {
     public partial class App : Application
     {
+        static AddOnManager addOnManager;
         static SynchronizationContext synchronizationContext;
+        static WorldOfWarcraftInstallation worldOfWarcraftInstallation;
 
         public static void ComposeEmail(string address) =>
             Process.Start(new ProcessStartInfo
@@ -19,6 +23,8 @@ namespace OpenAddOnManager.Windows
                 UseShellExecute = true,
                 Verb = "open"
             });
+
+        static Task CreateMainWindow() => OnUiThreadAsync(() => new MainWindow { DataContext = new MainWindowContext(addOnManager) }.Show());
 
         public static async Task OnUiThreadAsync(Action action)
         {
@@ -82,26 +88,31 @@ namespace OpenAddOnManager.Windows
                 Environment.Exit(0);
             }
 
-            var worldOfWarcraftInstallation = new WorldOfWarcraftInstallation(synchronizationContext: synchronizationContext);
-            var addOnManager = new AddOnManager(await Utilities.GetCommonStorageDirectoryAsync().ConfigureAwait(false), worldOfWarcraftInstallation, synchronizationContext);
-            await OnUiThreadAsync(() => new MainWindow { DataContext = new MainWindowContext(addOnManager) }.Show());
+            worldOfWarcraftInstallation = new WorldOfWarcraftInstallation(synchronizationContext: synchronizationContext);
+            addOnManager = new AddOnManager(await Utilities.GetCommonStorageDirectoryAsync().ConfigureAwait(false), worldOfWarcraftInstallation, synchronizationContext);
+
+            await CreateMainWindow().ConfigureAwait(false);
         }
 
         protected override void OnExit(ExitEventArgs e) => singleInstance.Dispose();
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            var primaryColor = SwatchHelper.Lookup[MaterialDesignColor.Green];
+            var accentColor = SwatchHelper.Lookup[MaterialDesignColor.Lime];
+            var theme = Theme.Create(new MaterialDesignDarkTheme(), primaryColor, accentColor);
+            Resources.SetTheme(theme);
+
             var wnd = new Window
             {
-                AllowsTransparency = true,
                 Height = 0,
-                Opacity = 0,
                 ShowInTaskbar = false,
                 Width = 0,
                 WindowStyle = WindowStyle.None
             };
             wnd.Show();
             wnd.Hide();
+
             synchronizationContext = SynchronizationContext.Current;
             ThreadPool.QueueUserWorkItem(Initialize);
             base.OnStartup(e);

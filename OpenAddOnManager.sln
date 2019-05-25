@@ -25,28 +25,53 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenAddOnManager.Windows.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenAddOnManager.Tests", "OpenAddOnManager.Tests\OpenAddOnManager.Tests.csproj", "{2C6021DD-2F66-447B-A9CC-CC03DE68A48F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaterialDesignColors.Wpf", "MaterialDesignColors.Wpf\MaterialDesignColors.Wpf.csproj", "{90B53209-C60C-4655-B28D-A1B3E1044BA3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaterialDesignThemes.Wpf", "MaterialDesignThemes.Wpf\MaterialDesignThemes.Wpf.csproj", "{F079FB0A-A8ED-4216-B6A5-345756751A04}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		AppVeyor|Any CPU = AppVeyor|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5FFEBCFA-6A01-4856-A61E-AEE2659A61E1}.AppVeyor|Any CPU.ActiveCfg = Release|Any CPU
+		{5FFEBCFA-6A01-4856-A61E-AEE2659A61E1}.AppVeyor|Any CPU.Build.0 = Release|Any CPU
 		{5FFEBCFA-6A01-4856-A61E-AEE2659A61E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5FFEBCFA-6A01-4856-A61E-AEE2659A61E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5FFEBCFA-6A01-4856-A61E-AEE2659A61E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5FFEBCFA-6A01-4856-A61E-AEE2659A61E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D557B8A-8B41-479B-B0BF-8C52746443D2}.AppVeyor|Any CPU.ActiveCfg = Release|Any CPU
+		{4D557B8A-8B41-479B-B0BF-8C52746443D2}.AppVeyor|Any CPU.Build.0 = Release|Any CPU
 		{4D557B8A-8B41-479B-B0BF-8C52746443D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4D557B8A-8B41-479B-B0BF-8C52746443D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4D557B8A-8B41-479B-B0BF-8C52746443D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4D557B8A-8B41-479B-B0BF-8C52746443D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{874858B9-B0C2-450E-8DD2-8EA0E7E54B1A}.AppVeyor|Any CPU.ActiveCfg = Release|Any CPU
+		{874858B9-B0C2-450E-8DD2-8EA0E7E54B1A}.AppVeyor|Any CPU.Build.0 = Release|Any CPU
 		{874858B9-B0C2-450E-8DD2-8EA0E7E54B1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{874858B9-B0C2-450E-8DD2-8EA0E7E54B1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{874858B9-B0C2-450E-8DD2-8EA0E7E54B1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{874858B9-B0C2-450E-8DD2-8EA0E7E54B1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C6021DD-2F66-447B-A9CC-CC03DE68A48F}.AppVeyor|Any CPU.ActiveCfg = Release|Any CPU
+		{2C6021DD-2F66-447B-A9CC-CC03DE68A48F}.AppVeyor|Any CPU.Build.0 = Release|Any CPU
 		{2C6021DD-2F66-447B-A9CC-CC03DE68A48F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2C6021DD-2F66-447B-A9CC-CC03DE68A48F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C6021DD-2F66-447B-A9CC-CC03DE68A48F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C6021DD-2F66-447B-A9CC-CC03DE68A48F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90B53209-C60C-4655-B28D-A1B3E1044BA3}.AppVeyor|Any CPU.ActiveCfg = AppVeyor|Any CPU
+		{90B53209-C60C-4655-B28D-A1B3E1044BA3}.AppVeyor|Any CPU.Build.0 = AppVeyor|Any CPU
+		{90B53209-C60C-4655-B28D-A1B3E1044BA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90B53209-C60C-4655-B28D-A1B3E1044BA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90B53209-C60C-4655-B28D-A1B3E1044BA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90B53209-C60C-4655-B28D-A1B3E1044BA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F079FB0A-A8ED-4216-B6A5-345756751A04}.AppVeyor|Any CPU.ActiveCfg = AppVeyor|Any CPU
+		{F079FB0A-A8ED-4216-B6A5-345756751A04}.AppVeyor|Any CPU.Build.0 = AppVeyor|Any CPU
+		{F079FB0A-A8ED-4216-B6A5-345756751A04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F079FB0A-A8ED-4216-B6A5-345756751A04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F079FB0A-A8ED-4216-B6A5-345756751A04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F079FB0A-A8ED-4216-B6A5-345756751A04}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

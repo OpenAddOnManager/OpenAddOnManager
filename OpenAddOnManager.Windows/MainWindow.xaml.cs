@@ -10,12 +10,9 @@ namespace OpenAddOnManager.Windows
     {
         public MainWindow() => InitializeComponent();
 
-        private void ClosedHandler(object sender, EventArgs e)
+        void ClosedHandler(object sender, EventArgs e)
         {
-            var worldOfWarcraftInstallation = Context.AddOnManager?.WorldOfWarcraftInstallation;
-            Context.AddOnManager?.Dispose();
             Context.Dispose();
-            (worldOfWarcraftInstallation as IDisposable)?.Dispose();
             Application.Current.Shutdown();
         }
 
@@ -39,7 +36,8 @@ namespace OpenAddOnManager.Windows
         void InitializeClientTab(Panel clientTabPanel)
         {
             var worldOfWarcraftInstallationClient = (WorldOfWarcraftInstallationClient)clientTabPanel.DataContext;
-            var clientAddOns = Context.AddOnManager.AddOns.ActiveWhere
+            var context = Context;
+            var clientAddOns = context.AddOnManager.AddOns.ActiveWhere
             (
                 addOn
                 =>
@@ -50,17 +48,17 @@ namespace OpenAddOnManager.Windows
                     ||
                     !addOn.IsPrereleaseVersion
                     ||
-                    Context.ShowPrereleaseVersions
+                    context.ShowPrereleaseVersions
                 )
                 &&
                 (
-                    string.IsNullOrWhiteSpace(Context.SearchFor)
+                    string.IsNullOrWhiteSpace(context.SearchFor)
                     ||
-                    addOn.AuthorName.Contains(Context.SearchFor.Trim(), StringComparison.OrdinalIgnoreCase)
+                    addOn.AuthorName.Contains(context.SearchFor.Trim(), StringComparison.OrdinalIgnoreCase)
                     ||
-                    addOn.Description.Contains(Context.SearchFor.Trim(), StringComparison.OrdinalIgnoreCase)
+                    addOn.Description.Contains(context.SearchFor.Trim(), StringComparison.OrdinalIgnoreCase)
                     ||
-                    addOn.Name.Contains(Context.SearchFor.Trim(), StringComparison.OrdinalIgnoreCase)
+                    addOn.Name.Contains(context.SearchFor.Trim(), StringComparison.OrdinalIgnoreCase)
                 )
             );
             clientTabPanel.Resources.Add("clientAddOns", clientAddOns);

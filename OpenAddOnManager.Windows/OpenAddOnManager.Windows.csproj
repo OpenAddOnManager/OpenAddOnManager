@@ -14,15 +14,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gear.ActiveExpressions" Version="1.0.50" />
-    <PackageReference Include="Gear.ActiveQuery" Version="1.0.18" />
-    <PackageReference Include="Gear.Components" Version="1.0.108" />
-    <PackageReference Include="Gear.NamedPipesSingleInstance" Version="1.0.0" />
-    <PackageReference Include="MaterialDesignThemes" Version="2.5.1" />
+    <PackageReference Include="Gear.ActiveExpressions" Version="1.0.52" />
+    <PackageReference Include="Gear.ActiveQuery" Version="1.0.19" />
+    <PackageReference Include="Gear.Components" Version="1.0.110" />
+    <PackageReference Include="Gear.NamedPipesSingleInstance" Version="1.0.2" />
     <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MaterialDesignThemes.Wpf\MaterialDesignThemes.Wpf.csproj" />
     <ProjectReference Include="..\OpenAddOnManager\OpenAddOnManager.csproj" />
   </ItemGroup>
 
