@@ -25,18 +25,23 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Image Grid.RowSpan="4" Grid.ColumnSpan="2" Source="http://www.manaobscura.com/wp-content/gallery/wow-bfa-alpha/WoWScrnShot_031918_195451.jpg" Stretch="UniformToFill" StretchDirection="Both" />
-        <Border Grid.RowSpan="3" Grid.ColumnSpan="2" Background="Black" Opacity="0.5" />
+        <Image Grid.RowSpan="4" Grid.ColumnSpan="2" Source="http://www.manaobscura.com/wp-content/gallery/wow-bfa-alpha/WoWScrnShot_031918_195451.jpg" Stretch="UniformToFill" StretchDirection="Both" Visibility="{Binding Source={x:Static Application.Current}, Path=ThemeIsHorde, Mode=OneWay, Converter={StaticResource FalseIsVisibleValueConverter}}" />
+        <Image Grid.RowSpan="4" Grid.ColumnSpan="2" Source="https://i.redd.it/txww2egxp2k11.jpg" Stretch="UniformToFill" StretchDirection="Both" Visibility="{Binding Source={x:Static Application.Current}, Path=ThemeIsHorde, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" />
+        <Border Grid.RowSpan="3" Grid.ColumnSpan="2" Background="{DynamicResource MaterialDesignBackground}" Opacity="0.5" />
         <StackPanel Margin="8,8,0,0" VerticalAlignment="Center" Orientation="Horizontal">
-            <md:PackIcon Kind="Search" Width="24" Height="24" />
+            <md:PackIcon VerticalAlignment="Center" Kind="Search" Width="24" Height="24" />
             <TextBox Width="200" VerticalAlignment="Center" md:HintAssist.Hint="Search for Add-Ons" Text="{Binding SearchFor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <CheckBox Margin="8,0,0,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Content="Show Prerelease Versions" IsChecked="{Binding ShowPrereleaseVersions, Mode=TwoWay}" />
         </StackPanel>
         <StackPanel Grid.Column="1" Margin="0,8,8,0" VerticalAlignment="Center" Orientation="Horizontal">
+            <RadioButton Margin="0,0,8,0" VerticalAlignment="Center" VerticalContentAlignment="Center" GroupName="Luminance" Content="Light" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsDark, Mode=TwoWay, Converter={StaticResource NegateValueConverter}}" />
+            <RadioButton Margin="0,0,8,0" VerticalAlignment="Center" VerticalContentAlignment="Center" GroupName="Luminance" Content="Dark" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsDark, Mode=TwoWay}" />
+            <RadioButton Margin="0,0,8,0" VerticalAlignment="Center" VerticalContentAlignment="Center" GroupName="Faction" Content="Alliance" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsHorde, Mode=TwoWay, Converter={StaticResource NegateValueConverter}}" />
+            <RadioButton Margin="0,0,8,0" VerticalAlignment="Center" VerticalContentAlignment="Center" GroupName="Faction" Content="Horde" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsHorde, Mode=TwoWay}" />
             <Button IsEnabled="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.Idle}}" Click="RefreshListingsClickHandler">Refresh Listings</Button>
         </StackPanel>
         <Grid Grid.Row="2" Grid.ColumnSpan="2">
-            <Border VerticalAlignment="Bottom" Background="White" Height="2" Opacity="0.5" />
+            <Border VerticalAlignment="Bottom" Background="{DynamicResource MaterialDesignBody}" Height="2" Opacity="0.5" />
             <ItemsControl ItemsSource="{Binding SortedClients, Mode=OneWay}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

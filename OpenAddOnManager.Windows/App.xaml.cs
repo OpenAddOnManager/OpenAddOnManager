@@ -2,15 +2,19 @@ using Gear.NamedPipesSingleInstance;
 using MaterialDesignColors;
 using MaterialDesignThemes.Wpf;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 
 namespace OpenAddOnManager.Windows
 {
-    public partial class App : Application
+    public partial class App : Application, INotifyPropertyChanged, INotifyPropertyChanging
     {
         static AddOnManager addOnManager;
         static SynchronizationContext synchronizationContext;
@@ -79,6 +83,19 @@ namespace OpenAddOnManager.Windows
         public App() => singleInstance = new SingleInstance("openaddonmanager", SecondaryInstanceMessageReceivedHandler);
 
         readonly SingleInstance singleInstance;
+        bool themeIsDark;
+        bool themeIsHorde;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangingEventHandler PropertyChanging;
+
+        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e) => PropertyChanged?.Invoke(this, e);
+
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null) => OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
+
+        protected virtual void OnPropertyChanging(PropertyChangingEventArgs e) => PropertyChanging?.Invoke(this, e);
+
+        protected void OnPropertyChanging([CallerMemberName] string propertyName = null) => OnPropertyChanging(new PropertyChangingEventArgs(propertyName));
 
         async void Initialize(object state)
         {
@@ -98,10 +115,7 @@ namespace OpenAddOnManager.Windows
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            var primaryColor = SwatchHelper.Lookup[MaterialDesignColor.Green];
-            var accentColor = SwatchHelper.Lookup[MaterialDesignColor.Lime];
-            var theme = Theme.Create(new MaterialDesignDarkTheme(), primaryColor, accentColor);
-            Resources.SetTheme(theme);
+            SetTheme();
 
             var wnd = new Window
             {
@@ -118,6 +132,20 @@ namespace OpenAddOnManager.Windows
             base.OnStartup(e);
         }
 
+        void ScheduleSetTheme() => ThreadPool.QueueUserWorkItem(async state => await OnUiThreadAsync(() => SetTheme()));
+
+        protected bool SetBackedProperty<TValue>(ref TValue backingField, in TValue value, [CallerMemberName] string propertyName = null)
+        {
+            if (!EqualityComparer<TValue>.Default.Equals(backingField, value))
+            {
+                OnPropertyChanging(propertyName);
+                backingField = value;
+                OnPropertyChanged(propertyName);
+                return true;
+            }
+            return false;
+        }
+
         async Task SecondaryInstanceMessageReceivedHandler(object message)
         {
             switch (message)
@@ -125,6 +153,43 @@ namespace OpenAddOnManager.Windows
                 case "showmainwindow":
                     await ShowMainWindowAsync();
                     break;
+            }
+        }
+
+        void SetTheme()
+        {
+            Color primary = default, accent = default;
+            if (themeIsHorde)
+            {
+                primary = SwatchHelper.Lookup[MaterialDesignColor.Red900];
+                accent = Colors.Black;
+            }
+            else
+            {
+                primary = SwatchHelper.Lookup[MaterialDesignColor.Blue800];
+                accent = SwatchHelper.Lookup[MaterialDesignColor.Yellow];
+            }
+            var theme = Theme.Create(themeIsDark ? (IBaseTheme)new MaterialDesignDarkTheme() : new MaterialDesignLightTheme(), primary, accent);
+            Current.Resources.SetTheme(theme);
+        }
+
+        public bool ThemeIsDark
+        {
+            get => themeIsDark;
+            set
+            {
+                if (SetBackedProperty(ref themeIsDark, in value))
+                    ScheduleSetTheme();
+            }
+        }
+
+        public bool ThemeIsHorde
+        {
+            get => themeIsHorde;
+            set
+            {
+                if (SetBackedProperty(ref themeIsHorde, in value))
+                    ScheduleSetTheme();
             }
         }
     }

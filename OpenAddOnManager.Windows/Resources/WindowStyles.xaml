@@ -5,8 +5,8 @@
         <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}" />
         <Setter Property="FontFamily" Value="{DynamicResource MaterialDesignFont}" />
         <Setter Property="TextElement.Foreground" Value="{DynamicResource MaterialDesignBody}" />
-        <Setter Property="TextElement.FontWeight" Value="Regular" />
-        <Setter Property="TextElement.FontSize" Value="13" />
+        <Setter Property="TextElement.FontWeight" Value="Medium" />
+        <Setter Property="TextElement.FontSize" Value="14" />
     </Style>
     <Style TargetType="{x:Type oamw:MainWindow}" BasedOn="{StaticResource WindowStyle}" />
 </ResourceDictionary>
