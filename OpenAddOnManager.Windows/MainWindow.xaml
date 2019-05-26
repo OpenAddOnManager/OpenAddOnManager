@@ -34,11 +34,27 @@
             <CheckBox Margin="8,0,0,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Content="Show Prerelease Versions" IsChecked="{Binding ShowPrereleaseVersions, Mode=TwoWay}" />
         </StackPanel>
         <StackPanel Grid.Column="1" Margin="0,8,8,0" VerticalAlignment="Center" Orientation="Horizontal">
-            <RadioButton Margin="0,0,8,0" VerticalAlignment="Center" VerticalContentAlignment="Center" GroupName="Luminance" Content="Light" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsDark, Mode=TwoWay, Converter={StaticResource NegateValueConverter}}" />
-            <RadioButton Margin="0,0,8,0" VerticalAlignment="Center" VerticalContentAlignment="Center" GroupName="Luminance" Content="Dark" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsDark, Mode=TwoWay}" />
-            <RadioButton Margin="0,0,8,0" VerticalAlignment="Center" VerticalContentAlignment="Center" GroupName="Faction" Content="Alliance" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsHorde, Mode=TwoWay, Converter={StaticResource NegateValueConverter}}" />
-            <RadioButton Margin="0,0,8,0" VerticalAlignment="Center" VerticalContentAlignment="Center" GroupName="Faction" Content="Horde" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsHorde, Mode=TwoWay}" />
-            <Button IsEnabled="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.Idle}}" Click="RefreshListingsClickHandler">Refresh Listings</Button>
+            <Button Style="{StaticResource MaterialDesignFloatingActionMiniButton}" IsEnabled="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.Idle}}" Click="RefreshListingsClickHandler" ToolTip="Refresh Add-On Listings">
+                <md:PackIcon Kind="CloudDownload" Width="24" Height="24" />
+            </Button>
+            <md:PopupBox VerticalAlignment="Center" StaysOpen="True" PlacementMode="BottomAndAlignRightEdges">
+                <Grid Margin="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <ToggleButton VerticalAlignment="Center" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsDark, Mode=TwoWay}" />
+                    <md:PackIcon Grid.Column="2" Kind="InvertColors" VerticalAlignment="Center" />
+                    <ToggleButton Grid.Row="2" VerticalAlignment="Center" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsHorde, Mode=TwoWay}" />
+                    <TextBlock Grid.Row="2" Grid.Column="2">Faction</TextBlock>
+                </Grid>
+            </md:PopupBox>
         </StackPanel>
         <Grid Grid.Row="2" Grid.ColumnSpan="2">
             <Border VerticalAlignment="Bottom" Background="{DynamicResource MaterialDesignBody}" Height="2" Opacity="0.5" />
@@ -86,7 +102,17 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <GroupBox Header="{Binding Name, Mode=OneWay}" Style="{DynamicResource MaterialDesignCardGroupBox}" Margin="8,0,8,8">
+                                        <GroupBox Style="{DynamicResource MaterialDesignCardGroupBox}" Margin="8,0,8,8">
+                                            <GroupBox.Header>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock VerticalAlignment="Center" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type FrameworkElement}, AncestorLevel=2}, Path=(TextElement.Foreground)}" TextWrapping="Wrap" Text="{Binding Name, Mode=OneWay}" />
+                                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type FrameworkElement}, AncestorLevel=2}, Path=(TextElement.Foreground)}" TextWrapping="Wrap" Visibility="{Binding AuthorName, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Text="{Binding AuthorName, Mode=OneWay, StringFormat={}By {0}}" />
+                                                </Grid>
+                                            </GroupBox.Header>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="96" />
@@ -95,30 +121,51 @@
                                                 </Grid.ColumnDefinitions>
                                                 <Grid Width="96" Height="96">
                                                     <Image Source="{Binding IconUrl, Mode=OneWay}" Stretch="UniformToFill" StretchDirection="Both" />
-                                                    <oamw:PrereleaseVersionDogEar Visibility="{Binding IsPrereleaseVersion, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" />
-                                                    <oamw:InstalledDogEar Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" />
-                                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="Bold" TextTrimming="CharacterEllipsis" Visibility="{Binding ActionState, Mode=OneWay, Converter={StaticResource NotEqualToIsVisibleValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Text="{Binding ActionState, Mode=OneWay}">
-                                                        <TextBlock.Effect>
-                                                            <DropShadowEffect Color="Black" ShadowDepth="3" BlurRadius="10" />
-                                                        </TextBlock.Effect>
-                                                    </TextBlock>
+                                                    <md:PackIcon Margin="8" Foreground="{DynamicResource SecondaryAccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Kind="Beta" Width="24" Height="24" Visibility="{Binding IsPrereleaseVersion, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}">
+                                                        <md:PackIcon.Effect>
+                                                            <DropShadowEffect ShadowDepth="0" />
+                                                        </md:PackIcon.Effect>
+                                                    </md:PackIcon>
+                                                    <md:PackIcon Margin="8" Foreground="{DynamicResource PrimaryHueLightBrush}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Kind="CheckBold" Width="24" Height="24" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}">
+                                                        <md:PackIcon.Effect>
+                                                            <DropShadowEffect ShadowDepth="0" />
+                                                        </md:PackIcon.Effect>
+                                                    </md:PackIcon>
                                                 </Grid>
                                                 <StackPanel Grid.Column="2" Orientation="Vertical">
-                                                    <TextBlock Style="{StaticResource MaterialDesignSubheadingTextBlock}" TextWrapping="Wrap" Visibility="{Binding AuthorName, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}"  Text="{Binding AuthorName, Mode=OneWay, StringFormat={}By {0}}" />
-                                                    <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Visibility="{Binding Description, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Text="{Binding Description, Mode=OneWay}" />
-                                                    <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                                    <StackPanel Orientation="Horizontal">
                                                         <StackPanel.Resources>
                                                             <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
                                                                 <Setter Property="Margin" Value="0,0,8,0" />
                                                             </Style>
                                                         </StackPanel.Resources>
-                                                        <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniButton}" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource FalseIsVisibleValueConverter}}" IsEnabled="{Binding ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Click="InstallClickHandler">
-                                                            <md:PackIcon Kind="Download" Width="24" Height="24" />
+                                                        <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniButton}" ToolTip="Install Add-On" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource FalseIsVisibleValueConverter}}" Click="InstallClickHandler" md:ButtonProgressAssist.IsIndeterminate="True">
+                                                            <md:ButtonProgressAssist.IsIndicatorVisible>
+                                                                <Binding Path="ActionState" Mode="OneWay" Converter="{StaticResource ContainedInValueConverter}">
+                                                                    <Binding.ConverterParameter>
+                                                                        <x:Array Type="{x:Type oam:AddOnActionState}">
+                                                                            <oam:AddOnActionState>Downloading</oam:AddOnActionState>
+                                                                            <oam:AddOnActionState>Installing</oam:AddOnActionState>
+                                                                        </x:Array>
+                                                                    </Binding.ConverterParameter>
+                                                                </Binding>
+                                                            </md:ButtonProgressAssist.IsIndicatorVisible>
+                                                            <md:PackIcon Kind="FolderDownload" Width="24" Height="24" />
                                                         </Button>
-                                                        <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Visibility="{Binding IsUpdateAvailable, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" IsEnabled="{Binding ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Click="UpdateClickHandler">
+                                                        <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" ToolTip="Update Add-On" Visibility="{Binding IsUpdateAvailable, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" Click="UpdateClickHandler" md:ButtonProgressAssist.IsIndeterminate="True" md:ButtonProgressAssist.IsIndicatorVisible="{Binding ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Installing}}">
                                                             <md:PackIcon Kind="Update" Width="24" Height="24" />
                                                         </Button>
-                                                        <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniDarkButton}" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" IsEnabled="{Binding ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnActionState.Idle}}" Click="UninstallClickHandler">
+                                                        <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniDarkButton}" ToolTip="Remove Add-On" Visibility="{Binding IsInstalled, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" Click="UninstallClickHandler" md:ButtonProgressAssist.IsIndeterminate="True">
+                                                            <md:ButtonProgressAssist.IsIndicatorVisible>
+                                                                <Binding Path="ActionState" Mode="OneWay" Converter="{StaticResource ContainedInValueConverter}">
+                                                                    <Binding.ConverterParameter>
+                                                                        <x:Array Type="{x:Type oam:AddOnActionState}">
+                                                                            <oam:AddOnActionState>Uninstalling</oam:AddOnActionState>
+                                                                            <oam:AddOnActionState>Deleting</oam:AddOnActionState>
+                                                                        </x:Array>
+                                                                    </Binding.ConverterParameter>
+                                                                </Binding>
+                                                            </md:ButtonProgressAssist.IsIndicatorVisible>
                                                             <md:PackIcon Kind="Delete" Width="24" Height="24" />
                                                         </Button>
                                                         <Button Content="Visit Support Page" Visibility="{Binding SupportUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitSupportPageClickHandler" />
@@ -127,6 +174,7 @@
                                                         <Button Content="Visit Author Page" Visibility="{Binding AuthorPageUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitAuthorPageClickHandler" />
                                                         <Button Content="Email Author" Visibility="{Binding AuthorEmail, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="EmailAddOnAuthorClickHandler" />
                                                     </StackPanel>
+                                                    <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Visibility="{Binding Description, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Text="{Binding Description, Mode=OneWay}" />
                                                 </StackPanel>
                                             </Grid>
                                         </GroupBox>

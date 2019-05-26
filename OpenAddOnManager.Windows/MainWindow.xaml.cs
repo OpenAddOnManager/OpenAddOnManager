@@ -68,6 +68,8 @@ namespace OpenAddOnManager.Windows
         async void InstallClickHandler(object sender, RoutedEventArgs e)
         {
             var addOn = (AddOn)((Button)sender).DataContext;
+            if (addOn.ActionState != AddOnActionState.Idle)
+                return;
             await addOn.DownloadAsync();
             if (addOn.IsLicensed && !addOn.IsLicenseAgreed && (bool)await DialogHost.Show(new AddOnLicenseDialog { DataContext = addOn }))
                 addOn.AgreeToLicense();
@@ -80,10 +82,18 @@ namespace OpenAddOnManager.Windows
         async void UninstallClickHandler(object sender, RoutedEventArgs e)
         {
             var addOn = (AddOn)((Button)sender).DataContext;
+            if (addOn.ActionState != AddOnActionState.Idle)
+                return;
             await addOn.DeleteAsync();
         }
 
-        async void UpdateClickHandler(object sender, RoutedEventArgs e) => await ((AddOn)((Button)sender).DataContext).InstallAsync();
+        async void UpdateClickHandler(object sender, RoutedEventArgs e)
+        {
+            var addOn = (AddOn)((Button)sender).DataContext;
+            if (addOn.ActionState != AddOnActionState.Idle)
+                return;
+            await addOn.InstallAsync();
+        }
 
         void VisitAuthorPageClickHandler(object sender, RoutedEventArgs e) => App.OpenInBrowser(((AddOn)((Button)sender).DataContext).AuthorPageUrl);
 
