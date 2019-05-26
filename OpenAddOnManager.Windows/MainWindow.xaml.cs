@@ -13,7 +13,7 @@ namespace OpenAddOnManager.Windows
         void ClosedHandler(object sender, EventArgs e)
         {
             Context.Dispose();
-            Application.Current.Shutdown();
+            ((App)Application.Current).Terminate();
         }
 
         void CleanUpClientTab(Panel clientTabPanel)
@@ -77,7 +77,30 @@ namespace OpenAddOnManager.Windows
                 await addOn.InstallAsync();
         }
 
-        async void RefreshListingsClickHandler(object sender, RoutedEventArgs e) => await Context.AddOnManager.UpdateAvailableAddOnsAsync();
+        void LocationChangedHandler(object sender, EventArgs e)
+        {
+            if (WindowState == WindowState.Normal)
+            {
+                App.MainWindowLeft = Left;
+                App.MainWindowTop = Top;
+            }
+        }
+
+        async void RefreshListingsClickHandler(object sender, RoutedEventArgs e)
+        {
+            if (Context.AddOnManager.ActionState != AddOnManagerActionState.Idle)
+                return;
+            await Context.AddOnManager.UpdateAvailableAddOnsAsync();
+        }
+
+        void SizeChangedHandler(object sender, SizeChangedEventArgs e)
+        {
+            if (WindowState == WindowState.Normal)
+            {
+                App.MainWindowHeight = e.NewSize.Height;
+                App.MainWindowWidth = e.NewSize.Width;
+            }
+        }
 
         async void UninstallClickHandler(object sender, RoutedEventArgs e)
         {

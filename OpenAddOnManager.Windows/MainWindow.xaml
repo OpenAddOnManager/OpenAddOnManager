@@ -13,7 +13,10 @@
         Width="1000"
         WindowStartupLocation="CenterScreen"
 
-        Closed="ClosedHandler">
+        Closed="ClosedHandler"
+        LocationChanged="LocationChangedHandler"
+        SizeChanged="SizeChangedHandler"
+        >
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -34,7 +37,7 @@
             <CheckBox Margin="8,0,0,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Content="Show Prerelease Versions" IsChecked="{Binding ShowPrereleaseVersions, Mode=TwoWay}" />
         </StackPanel>
         <StackPanel Grid.Column="1" Margin="0,8,8,0" VerticalAlignment="Center" Orientation="Horizontal">
-            <Button Style="{StaticResource MaterialDesignFloatingActionMiniButton}" IsEnabled="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.Idle}}" Click="RefreshListingsClickHandler" ToolTip="Refresh Add-On Listings">
+            <Button Style="{StaticResource MaterialDesignFloatingActionMiniButton}" Click="RefreshListingsClickHandler" ToolTip="Refresh Add-On Listings" md:ButtonProgressAssist.IsIndeterminate="True" md:ButtonProgressAssist.IsIndicatorVisible="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.CheckingManifests}}">
                 <md:PackIcon Kind="CloudDownload" Width="24" Height="24" />
             </Button>
             <md:PopupBox VerticalAlignment="Center" StaysOpen="True" PlacementMode="BottomAndAlignRightEdges">

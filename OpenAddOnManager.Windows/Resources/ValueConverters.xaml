@@ -9,6 +9,7 @@
     <vc:FalseIsVisibleValueConverter x:Key="FalseIsVisibleValueConverter" />
     <vc:NegateValueConverter x:Key="NegateValueConverter" />
     <vc:NotEqualToIsVisibleValueConverter x:Key="NotEqualToIsVisibleValueConverter" />
+    <vc:NotEqualToValueConverter x:Key="NotEqualToValueConverter" />
     <vc:NotNullIsVisibleValueConverter x:Key="NotNullIsVisibleValueConverter" />
     <vc:TrueIsVisibleValueConverter x:Key="TrueIsVisibleValueConverter" />
 </ResourceDictionary>

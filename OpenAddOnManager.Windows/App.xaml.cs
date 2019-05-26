@@ -1,10 +1,12 @@
 using Gear.NamedPipesSingleInstance;
 using MaterialDesignColors;
 using MaterialDesignThemes.Wpf;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -28,7 +30,19 @@ namespace OpenAddOnManager.Windows
                 Verb = "open"
             });
 
-        static Task CreateMainWindow() => OnUiThreadAsync(() => new MainWindow { DataContext = new MainWindowContext(addOnManager) }.Show());
+        static Task CreateMainWindow() => OnUiThreadAsync(() =>
+        {
+            var mainWindow = new MainWindow { DataContext = new MainWindowContext(addOnManager) };
+            if (MainWindowHeight != null && MainWindowLeft != null && MainWindowTop != null && MainWindowWidth != null)
+            {
+                mainWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+                mainWindow.Height = MainWindowHeight.Value;
+                mainWindow.Left = MainWindowLeft.Value;
+                mainWindow.Top = MainWindowTop.Value;
+                mainWindow.Width = MainWindowWidth.Value;
+            }
+            mainWindow.Show();
+        });
 
         public static async Task OnUiThreadAsync(Action action)
         {
@@ -80,9 +94,20 @@ namespace OpenAddOnManager.Windows
             }
         });
 
+        public static double? MainWindowHeight { get; set; }
+
+        public static double? MainWindowLeft { get; set; }
+
+        public static double? MainWindowTop { get; set; }
+
+        public static double? MainWindowWidth { get; set; }
+
+        public static bool ShowPrereleaseVersions { get; set; }
+
         public App() => singleInstance = new SingleInstance("openaddonmanager", SecondaryInstanceMessageReceivedHandler);
 
         readonly SingleInstance singleInstance;
+        FileInfo stateFile;
         bool themeIsDark;
         bool themeIsHorde;
 
@@ -107,6 +132,20 @@ namespace OpenAddOnManager.Windows
 
             worldOfWarcraftInstallation = new WorldOfWarcraftInstallation(synchronizationContext: synchronizationContext);
             addOnManager = new AddOnManager(await Utilities.GetCommonStorageDirectoryAsync().ConfigureAwait(false), worldOfWarcraftInstallation, synchronizationContext);
+            stateFile = new FileInfo(Path.Combine(addOnManager.StorageDirectory.FullName, "app.json"));
+
+            if (stateFile.Exists)
+            {
+                var appState = JsonConvert.DeserializeObject<AppState>(await File.ReadAllTextAsync(stateFile.FullName).ConfigureAwait(false));
+                MainWindowHeight = appState.MainWindowHeight;
+                MainWindowLeft = appState.MainWindowLeft;
+                MainWindowTop = appState.MainWindowTop;
+                MainWindowWidth = appState.MainWindowWidth;
+                ShowPrereleaseVersions = appState.ShowPrereleaseVersions;
+                themeIsDark = appState.ThemeIsDark;
+                themeIsHorde = appState.ThemeIsHorde;
+                await OnUiThreadAsync(() => SetTheme()).ConfigureAwait(false);
+            }
 
             await CreateMainWindow().ConfigureAwait(false);
         }
@@ -131,6 +170,27 @@ namespace OpenAddOnManager.Windows
             ThreadPool.QueueUserWorkItem(Initialize);
             base.OnStartup(e);
         }
+
+        public void Terminate() => ThreadPool.QueueUserWorkItem(async state =>
+        {
+            addOnManager?.Dispose();
+            worldOfWarcraftInstallation?.Dispose();
+
+            await File.WriteAllTextAsync(stateFile.FullName, JsonConvert.SerializeObject(new AppState
+            {
+                MainWindowHeight = MainWindowHeight,
+                MainWindowLeft = MainWindowLeft,
+                MainWindowTop = MainWindowTop,
+                MainWindowWidth = MainWindowWidth,
+                ShowPrereleaseVersions = ShowPrereleaseVersions,
+                ThemeIsDark = ThemeIsDark,
+                ThemeIsHorde = ThemeIsHorde
+            })).ConfigureAwait(false);
+
+            singleInstance?.Dispose();
+
+            await OnUiThreadAsync(() => Shutdown()).ConfigureAwait(false);
+        });
 
         void ScheduleSetTheme() => ThreadPool.QueueUserWorkItem(async state => await OnUiThreadAsync(() => SetTheme()));
 

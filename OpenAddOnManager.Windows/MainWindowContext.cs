@@ -8,6 +8,7 @@ namespace OpenAddOnManager.Windows
     {
         public MainWindowContext(AddOnManager addOnManager)
         {
+            showPrereleaseVersions = App.ShowPrereleaseVersions;
             AddOnManager = addOnManager;
             SortedClients = addOnManager.WorldOfWarcraftInstallation.Clients.ActiveOrderBy(client => client.ReleaseChannelName);
             firstSortedClient = SortedClients.ActiveFirstOrDefault();
@@ -53,7 +54,11 @@ namespace OpenAddOnManager.Windows
         public bool ShowPrereleaseVersions
         {
             get => showPrereleaseVersions;
-            set => SetBackedProperty(ref showPrereleaseVersions, in value);
+            set
+            {
+                if (SetBackedProperty(ref showPrereleaseVersions, in value))
+                    App.ShowPrereleaseVersions = showPrereleaseVersions;
+            }
         }
 
         public IActiveEnumerable<IWorldOfWarcraftInstallationClient> SortedClients { get; }
