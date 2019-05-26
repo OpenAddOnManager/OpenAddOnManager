@@ -41,7 +41,6 @@
         <StackPanel Margin="8,8,0,0" VerticalAlignment="Center" Orientation="Horizontal">
             <md:PackIcon VerticalAlignment="Center" Kind="Search" Width="24" Height="24" />
             <TextBox Width="200" VerticalAlignment="Center" md:HintAssist.Hint="Search for Add-Ons" Text="{Binding SearchFor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            <CheckBox Margin="8,0,0,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Content="Show Prerelease Versions" IsChecked="{Binding ShowPrereleaseVersions, Mode=TwoWay}" />
         </StackPanel>
         <StackPanel Grid.Column="1" Margin="0,8,8,0" VerticalAlignment="Center" Orientation="Horizontal">
             <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniButton}" Click="CheckForAddOnUpdatesClickHandler" ToolTip="Check for Add-On Updates" md:ButtonProgressAssist.IsIndeterminate="True" md:ButtonProgressAssist.IsIndicatorVisible="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.CheckingForAddOnUpdates}}">
@@ -53,7 +52,7 @@
                 </Button>
             </md:Badged>
             <md:PopupBox VerticalAlignment="Center" StaysOpen="True" PlacementMode="BottomAndAlignRightEdges">
-                <Grid Margin="12">
+                <Grid Margin="24,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="8" />
@@ -63,11 +62,26 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="8" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="24" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="24" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <ToggleButton VerticalAlignment="Center" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsDark, Mode=TwoWay}" />
-                    <md:PackIcon Grid.Column="2" Kind="InvertColors" VerticalAlignment="Center" />
-                    <ToggleButton Grid.Row="2" VerticalAlignment="Center" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsHorde, Mode=TwoWay}" />
-                    <TextBlock Grid.Row="2" Grid.Column="2">Faction</TextBlock>
+                    <TextBlock Grid.ColumnSpan="3" Style="{StaticResource MaterialDesignTitleTextBlock}">APPEARANCE</TextBlock>
+                    <ToggleButton Grid.Row="2" VerticalAlignment="Center" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsDark, Mode=TwoWay}" />
+                    <md:PackIcon Grid.Row="2" Grid.Column="2" Kind="InvertColors" VerticalAlignment="Center" />
+                    <ToggleButton Grid.Row="4" VerticalAlignment="Center" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsHorde, Mode=TwoWay}" />
+                    <TextBlock Grid.Row="4" Grid.Column="2">Faction</TextBlock>
+                    <TextBlock Grid.Row="6" Grid.ColumnSpan="3" Style="{StaticResource MaterialDesignTitleTextBlock}">LISTINGS</TextBlock>
+                    <ToggleButton Grid.Row="8" VerticalAlignment="Center" IsChecked="{Binding ShowPrereleaseVersions, Mode=TwoWay}" />
+                    <TextBlock Grid.Row="8" Grid.Column="2">Show Prerelease Versions</TextBlock>
+                    <TextBlock Grid.Row="10" Grid.ColumnSpan="3" Style="{StaticResource MaterialDesignCaptionTextBlock}">
+                        <Hyperlink NavigateUri="https://github.com/OpenAddOnManager/OpenAddOnManager"><Run Text="{Binding Source={x:Static Application.Current}, Path=VersionMoniker, Mode=OneTime}" /></Hyperlink>
+                    </TextBlock>
                 </Grid>
             </md:PopupBox>
         </StackPanel>
@@ -183,11 +197,11 @@
                                                             </md:ButtonProgressAssist.IsIndicatorVisible>
                                                             <md:PackIcon Kind="Delete" Width="24" Height="24" />
                                                         </Button>
-                                                        <Button Content="Visit Support Page" Visibility="{Binding SupportUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitSupportPageClickHandler" />
-                                                        <Button Content="Visit Add-On Page" Visibility="{Binding AddOnPageUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitAddOnPageClickHandler" />
-                                                        <Button Content="Donate" Visibility="{Binding DonationsUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="DonateClickHandler" />
-                                                        <Button Content="Visit Author Page" Visibility="{Binding AuthorPageUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitAuthorPageClickHandler" />
-                                                        <Button Content="Email Author" Visibility="{Binding AuthorEmail, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="EmailAddOnAuthorClickHandler" />
+                                                        <Button Content="SUPPORT" Visibility="{Binding SupportUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitSupportPageClickHandler" />
+                                                        <Button Content="HOMEPAGE" Visibility="{Binding AddOnPageUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitAddOnPageClickHandler" />
+                                                        <Button Content="DONATE" Visibility="{Binding DonationsUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="DonateClickHandler" />
+                                                        <Button Content="AUTHOR HOMEPAGE" Visibility="{Binding AuthorPageUrl, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="VisitAuthorPageClickHandler" />
+                                                        <Button Content="EMAIL AUTHOR" Visibility="{Binding AuthorEmail, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Click="EmailAddOnAuthorClickHandler" />
                                                     </StackPanel>
                                                     <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Visibility="{Binding Description, Mode=OneWay, Converter={StaticResource NotNullIsVisibleValueConverter}}" Text="{Binding Description, Mode=OneWay}" />
                                                 </StackPanel>

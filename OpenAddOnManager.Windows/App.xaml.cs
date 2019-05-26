@@ -9,7 +9,9 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -135,6 +137,20 @@ namespace OpenAddOnManager.Windows
         public static double? MainWindowWidth { get; set; }
 
         public static bool ShowPrereleaseVersions { get; set; }
+
+        public static string VersionMoniker
+        {
+            get
+            {
+                var myVersion = Assembly.GetEntryAssembly().GetName().Version;
+                var moniker = new StringBuilder($"Open Add-On Manager for Windows v{myVersion.Major}.{myVersion.Minor}");
+                if (myVersion.Build > 0)
+                    moniker.Append($", patch {myVersion.Build}");
+                else if (myVersion.Revision > 0)
+                    moniker.Append($", revision {myVersion.Revision}");
+                return moniker.ToString();
+            }
+        }
 
         public App() => singleInstance = new SingleInstance("openaddonmanager", SecondaryInstanceMessageReceivedHandler);
 

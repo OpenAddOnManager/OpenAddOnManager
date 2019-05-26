@@ -31,8 +31,8 @@
                         <Setter Property="Margin" Value="8,0,0,0" />
                     </Style>
                 </StackPanel.Resources>
-                <Button x:Name="accept" IsDefault="True" Command="{x:Static md:DialogHost.CloseDialogCommand}">Accept</Button>
-                <Button x:Name="decline" IsCancel="True" Command="{x:Static md:DialogHost.CloseDialogCommand}">Decline</Button>
+                <Button x:Name="accept" IsDefault="True" Command="{x:Static md:DialogHost.CloseDialogCommand}">ACCEPT</Button>
+                <Button x:Name="decline" IsCancel="True" Command="{x:Static md:DialogHost.CloseDialogCommand}">DECLINE</Button>
             </StackPanel>
         </Grid>
     </GroupBox>
