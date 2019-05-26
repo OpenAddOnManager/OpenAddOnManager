@@ -210,6 +210,7 @@ namespace OpenAddOnManager
             ActionState = AddOnManagerActionState.CheckingForAddOnUpdates;
             try
             {
+                var addOnKeysInManifests = new HashSet<Guid>();
                 var jsonSerializer = JsonSerializer.CreateDefault();
                 using (var httpClient = CreateHttpClient())
                     foreach (var manifestUrl in await ManifestUrls.GetAllAsync().ConfigureAwait(false))
@@ -225,14 +226,15 @@ namespace OpenAddOnManager
                                     throw new FormatException();
                                 while ((await responseJsonTextReader.ReadAsync().ConfigureAwait(false)) && responseJsonTextReader.TokenType == JsonToken.PropertyName)
                                 {
-                                    if (!Guid.TryParse((string)responseJsonTextReader.Value, out var addOnsKey))
+                                    if (!Guid.TryParse((string)responseJsonTextReader.Value, out var addOnKey))
                                         throw new FormatException();
                                     await responseJsonTextReader.ReadAsync().ConfigureAwait(false);
                                     var entry = jsonSerializer.Deserialize<AddOnManifestEntry>(responseJsonTextReader);
-                                    if (addOns.TryGetValue(addOnsKey, out var addOn))
+                                    addOnKeysInManifests.Add(addOnKey);
+                                    if (addOns.TryGetValue(addOnKey, out var addOn))
                                         await addOn.UpdatePropertiesFromManifestEntryAsync(entry).ConfigureAwait(false);
                                     else
-                                        addOns.Add(addOnsKey, new AddOn(this, addOnsKey, entry));
+                                        addOns.Add(addOnKey, new AddOn(this, addOnKey, entry));
                                 }
                             }
                         }
@@ -241,6 +243,7 @@ namespace OpenAddOnManager
                             // TODO: tell user manifest is bad
                         }
                     }
+                await addOns.RemoveAllAsync((addOnKey, addOn) => !addOnKeysInManifests.Contains(addOnKey)).ConfigureAwait(false);
                 var downloadingTasks = new List<Task>();
                 foreach (var addOnKey in await addOns.GetAllKeysAsync().ConfigureAwait(false))
                 {
