@@ -5,6 +5,7 @@ using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -32,6 +33,9 @@ namespace OpenAddOnManager
 
             WorldOfWarcraftInstallation = worldOfWarcraftInstallation;
             addOns = new SynchronizedObservableDictionary<Guid, AddOn>();
+            addOnsWithUpdateAvailable = addOns.ActiveCount((addOnKey, addOn) => addOn.IsUpdateAvailable);
+            addOnsWithUpdateAvailable.PropertyChanged += AddOnsWithUpdateAvailablePropertyChanged;
+            addOnsWithUpdateAvailable.PropertyChanging += AddOnsWithUpdateAvailablePropertyChanging;
             addOnsActiveEnumerable = addOns.ToActiveEnumerable();
             ManifestUrls = new SynchronizedRangeObservableCollection<Uri>(DefaultManifestUrls);
             AddOns = synchronizationContext == null ? addOnsActiveEnumerable : addOnsActiveEnumerable.SwitchContext(synchronizationContext);
@@ -50,45 +54,24 @@ namespace OpenAddOnManager
         AddOnManagerActionState actionState = AddOnManagerActionState.Idle;
         readonly SynchronizedObservableDictionary<Guid, AddOn> addOns;
         readonly IActiveEnumerable<AddOn> addOnsActiveEnumerable;
+        readonly IActiveValue<int> addOnsWithUpdateAvailable;
         readonly TaskCompletionSource<object> initializationCompleteTaskCompletionSource;
-        DateTimeOffset lastManifestsCheck;
+        DateTimeOffset lastUpdatesCheck;
         TimeSpan manifestsCheckFrequency = TimeSpan.FromDays(1);
         readonly Timer manifestsCheckTimer;
         readonly AsyncLock saveStateAccess = new AsyncLock();
         readonly FileInfo stateFile;
 
-        internal readonly AsyncReaderWriterLock AddOnsActing = new AsyncReaderWriterLock();
-
-        void ScheduleNextManifestsCheck()
+        void AddOnsWithUpdateAvailablePropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            var nextCheckIn = manifestsCheckFrequency - (DateTimeOffset.Now - lastManifestsCheck);
-            if (nextCheckIn < TimeSpan.Zero)
-                nextCheckIn = TimeSpan.Zero;
-            manifestsCheckTimer.Change(nextCheckIn, never);
+            if (e.PropertyName == nameof(IActiveValue<int>.Value))
+                OnPropertyChanged(nameof(AddOnsWithUpdateAvailable));
         }
 
-        async void ManifestsCheckTimerCallback(object state)
+        void AddOnsWithUpdateAvailablePropertyChanging(object sender, PropertyChangingEventArgs e)
         {
-            try
-            {
-                await UpdateAvailableAddOnsAsync().ConfigureAwait(false);
-            }
-            finally
-            {
-                ScheduleNextManifestsCheck();
-            }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-                using (AddOnsActing.WriterLock())
-                {
-                    ManifestUrls.GenericCollectionChanged -= ManifestUrlsGenericCollectionChangedHandler;
-                    AddOns?.Dispose();
-                    addOnsActiveEnumerable?.Dispose();
-                    manifestsCheckTimer?.Dispose();
-                }
+            if (e.PropertyName == nameof(IActiveValue<int>.Value))
+                OnPropertyChanged(nameof(AddOnsWithUpdateAvailable));
         }
 
         HttpClient CreateHttpClient()
@@ -105,6 +88,18 @@ namespace OpenAddOnManager
             return httpClient;
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                manifestsCheckTimer?.Dispose();
+                ManifestUrls.GenericCollectionChanged -= ManifestUrlsGenericCollectionChangedHandler;
+                AddOns?.Dispose();
+                addOnsActiveEnumerable?.Dispose();
+                addOnsWithUpdateAvailable?.Dispose();
+            }
+        }
+
         void Initialize(object state)
         {
             try
@@ -118,7 +113,7 @@ namespace OpenAddOnManager
                         using (var streamReader = File.OpenText(stateFile.FullName))
                         using (var jsonReader = new JsonTextReader(streamReader))
                             addOnManagerState = JsonSerializer.CreateDefault().Deserialize<AddOnManagerState>(jsonReader);
-                        lastManifestsCheck = addOnManagerState.LastManifestsCheck;
+                        lastUpdatesCheck = addOnManagerState.LastUpdatesCheck;
                         if (addOnManagerState.ManifestsCheckFrequency >= MinimumManifestsCheckFrequency)
                             manifestsCheckFrequency = addOnManagerState.ManifestsCheckFrequency;
                         ManifestUrls.Reset(addOnManagerState.ManifestUrls);
@@ -147,6 +142,18 @@ namespace OpenAddOnManager
             }
         }
 
+        async void ManifestsCheckTimerCallback(object state)
+        {
+            try
+            {
+                await UpdateAvailableAddOnsAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                ScheduleNextManifestsCheck();
+            }
+        }
+
         void ManifestUrlsGenericCollectionChangedHandler(object sender, INotifyGenericCollectionChangedEventArgs<Uri> e) => SaveState();
 
         void SaveState() => ThreadPool.QueueUserWorkItem(async state => await SaveStateAsync());
@@ -159,56 +166,89 @@ namespace OpenAddOnManager
                 using (var jsonWriter = new JsonTextWriter(streamWriter))
                     JsonSerializer.CreateDefault().Serialize(jsonWriter, new AddOnManagerState
                     {
-                        LastManifestsCheck = lastManifestsCheck,
+                        LastUpdatesCheck = lastUpdatesCheck,
                         ManifestsCheckFrequency = manifestsCheckFrequency,
                         ManifestUrls = (await ManifestUrls.GetAllAsync().ConfigureAwait(false)).ToList()
                     });
         }
 
+        void ScheduleNextManifestsCheck()
+        {
+            var nextCheckIn = manifestsCheckFrequency - (DateTimeOffset.Now - lastUpdatesCheck);
+            if (nextCheckIn < TimeSpan.Zero)
+                nextCheckIn = TimeSpan.Zero;
+            manifestsCheckTimer.Change(nextCheckIn, never);
+        }
+
+        public Task UpdateAllAddOns() => Task.Run(async () =>
+        {
+            ActionState = AddOnManagerActionState.UpdatingAllAddOns;
+            try
+            {
+                var updatingTasks = new List<Task>();
+                foreach (var addOnKey in await addOns.GetAllKeysAsync().ConfigureAwait(false))
+                {
+                    var (addOnRetrieved, addOn) = await addOns.TryGetValueAsync(addOnKey).ConfigureAwait(false);
+                    if (addOnRetrieved && addOn.IsUpdateAvailable)
+                        updatingTasks.Add(addOn.InstallAsync());
+                }
+                await Task.WhenAll(updatingTasks).ConfigureAwait(false);
+            }
+            finally
+            {
+                ActionState = AddOnManagerActionState.Idle;
+            }
+        });
+
         public Task UpdateAvailableAddOnsAsync() => Task.Run(async () =>
         {
-            using (await AddOnsActing.WriterLockAsync().ConfigureAwait(false))
+            ActionState = AddOnManagerActionState.CheckingForAddOnUpdates;
+            try
             {
-                ActionState = AddOnManagerActionState.CheckingManifests;
-                try
-                {
-                    var jsonSerializer = JsonSerializer.CreateDefault();
-                    using (var httpClient = CreateHttpClient())
-                        foreach (var manifestUrl in await ManifestUrls.GetAllAsync().ConfigureAwait(false))
+                var jsonSerializer = JsonSerializer.CreateDefault();
+                using (var httpClient = CreateHttpClient())
+                    foreach (var manifestUrl in await ManifestUrls.GetAllAsync().ConfigureAwait(false))
+                    {
+                        try
                         {
-                            try
+                            using (var responseStream = await httpClient.GetStreamAsync(manifestUrl).ConfigureAwait(false))
+                            using (var responseStreamReader = new StreamReader(responseStream))
+                            using (var responseJsonTextReader = new JsonTextReader(responseStreamReader))
                             {
-                                using (var responseStream = await httpClient.GetStreamAsync(manifestUrl).ConfigureAwait(false))
-                                using (var responseStreamReader = new StreamReader(responseStream))
-                                using (var responseJsonTextReader = new JsonTextReader(responseStreamReader))
+                                await responseJsonTextReader.ReadAsync().ConfigureAwait(false);
+                                if (responseJsonTextReader.TokenType != JsonToken.StartObject)
+                                    throw new FormatException();
+                                while ((await responseJsonTextReader.ReadAsync().ConfigureAwait(false)) && responseJsonTextReader.TokenType == JsonToken.PropertyName)
                                 {
-                                    await responseJsonTextReader.ReadAsync().ConfigureAwait(false);
-                                    if (responseJsonTextReader.TokenType != JsonToken.StartObject)
+                                    if (!Guid.TryParse((string)responseJsonTextReader.Value, out var addOnsKey))
                                         throw new FormatException();
-                                    while ((await responseJsonTextReader.ReadAsync().ConfigureAwait(false)) && responseJsonTextReader.TokenType == JsonToken.PropertyName)
-                                    {
-                                        if (!Guid.TryParse((string)responseJsonTextReader.Value, out var addOnsKey))
-                                            throw new FormatException();
-                                        await responseJsonTextReader.ReadAsync().ConfigureAwait(false);
-                                        var entry = jsonSerializer.Deserialize<AddOnManifestEntry>(responseJsonTextReader);
-                                        if (addOns.TryGetValue(addOnsKey, out var addOn))
-                                            await addOn.UpdatePropertiesFromManifestEntryAsync(entry).ConfigureAwait(false);
-                                        else
-                                            addOns.Add(addOnsKey, new AddOn(this, addOnsKey, entry));
-                                    }
+                                    await responseJsonTextReader.ReadAsync().ConfigureAwait(false);
+                                    var entry = jsonSerializer.Deserialize<AddOnManifestEntry>(responseJsonTextReader);
+                                    if (addOns.TryGetValue(addOnsKey, out var addOn))
+                                        await addOn.UpdatePropertiesFromManifestEntryAsync(entry).ConfigureAwait(false);
+                                    else
+                                        addOns.Add(addOnsKey, new AddOn(this, addOnsKey, entry));
                                 }
                             }
-                            catch (HttpRequestException)
-                            {
-                                // TODO: tell user manifest is bad
-                            }
                         }
-                }
-                finally
+                        catch (HttpRequestException)
+                        {
+                            // TODO: tell user manifest is bad
+                        }
+                    }
+                var downloadingTasks = new List<Task>();
+                foreach (var addOnKey in await addOns.GetAllKeysAsync().ConfigureAwait(false))
                 {
-                    LastManifestsCheck = DateTimeOffset.Now;
-                    ActionState = AddOnManagerActionState.Idle;
+                    var (addOnRetrieved, addOn) = await addOns.TryGetValueAsync(addOnKey).ConfigureAwait(false);
+                    if (addOnRetrieved && addOn.IsDownloaded)
+                        downloadingTasks.Add(addOn.DownloadAsync());
                 }
+                await Task.WhenAll(downloadingTasks).ConfigureAwait(false);
+            }
+            finally
+            {
+                LastUpdatesCheck = DateTimeOffset.Now;
+                ActionState = AddOnManagerActionState.Idle;
             }
         });
 
@@ -222,14 +262,16 @@ namespace OpenAddOnManager
 
         public DirectoryInfo AddOnsDirectory { get; }
 
+        public int AddOnsWithUpdateAvailable => addOnsWithUpdateAvailable.Value;
+
         public Task InitializationComplete { get; }
 
-        public DateTimeOffset LastManifestsCheck
+        public DateTimeOffset LastUpdatesCheck
         {
-            get => lastManifestsCheck;
+            get => lastUpdatesCheck;
             private set
             {
-                if (SetBackedProperty(ref lastManifestsCheck, in value))
+                if (SetBackedProperty(ref lastUpdatesCheck, in value))
                     SaveState();
             }
         }

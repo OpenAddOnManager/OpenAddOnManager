@@ -7,6 +7,7 @@
     <vc:EqualToIsVisibleValueConverter x:Key="EqualToIsVisibleValueConverter" />
     <vc:EqualToValueConverter x:Key="EqualToValueConverter" />
     <vc:FalseIsVisibleValueConverter x:Key="FalseIsVisibleValueConverter" />
+    <vc:GreaterThanIsVisibleValueConverter x:Key="GreaterThanIsVisibleValueConverter" />
     <vc:NegateValueConverter x:Key="NegateValueConverter" />
     <vc:NotEqualToIsVisibleValueConverter x:Key="NotEqualToIsVisibleValueConverter" />
     <vc:NotEqualToValueConverter x:Key="NotEqualToValueConverter" />

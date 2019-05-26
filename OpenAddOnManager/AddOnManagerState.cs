@@ -5,7 +5,7 @@ namespace OpenAddOnManager
 {
     public class AddOnManagerState
     {
-        public DateTimeOffset LastManifestsCheck { get; set; }
+        public DateTimeOffset LastUpdatesCheck { get; set; }
 
         public TimeSpan ManifestsCheckFrequency { get; set; }
 

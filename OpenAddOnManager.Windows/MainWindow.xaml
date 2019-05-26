@@ -44,9 +44,14 @@
             <CheckBox Margin="8,0,0,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Content="Show Prerelease Versions" IsChecked="{Binding ShowPrereleaseVersions, Mode=TwoWay}" />
         </StackPanel>
         <StackPanel Grid.Column="1" Margin="0,8,8,0" VerticalAlignment="Center" Orientation="Horizontal">
-            <Button Style="{StaticResource MaterialDesignFloatingActionMiniButton}" Click="RefreshListingsClickHandler" ToolTip="Refresh Add-On Listings" md:ButtonProgressAssist.IsIndeterminate="True" md:ButtonProgressAssist.IsIndicatorVisible="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.CheckingManifests}}">
-                <md:PackIcon Kind="CloudDownload" Width="24" Height="24" />
+            <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniButton}" Click="CheckForAddOnUpdatesClickHandler" ToolTip="Check for Add-On Updates" md:ButtonProgressAssist.IsIndeterminate="True" md:ButtonProgressAssist.IsIndicatorVisible="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.CheckingForAddOnUpdates}}">
+                <md:PackIcon Kind="CloudSearch" Width="24" Height="24" />
             </Button>
+            <md:Badged Margin="0,0,8,0" BadgePlacementMode="BottomRight" Badge="{Binding AddOnManager.AddOnsWithUpdateAvailable, Mode=OneWay}" Visibility="{Binding AddOnManager.AddOnsWithUpdateAvailable, Mode=OneWay, Converter={StaticResource GreaterThanIsVisibleValueConverter}, ConverterParameter=0}">
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Click="UpdateAllAddOnsClickHandler" ToolTip="Update All Add-Ons"  md:ButtonProgressAssist.IsIndeterminate="True" md:ButtonProgressAssist.IsIndicatorVisible="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.UpdatingAllAddOns}}">
+                    <md:PackIcon Kind="Update" Width="24" Height="24" />
+                </Button>
+            </md:Badged>
             <md:PopupBox VerticalAlignment="Center" StaysOpen="True" PlacementMode="BottomAndAlignRightEdges">
                 <Grid Margin="12">
                     <Grid.ColumnDefinitions>

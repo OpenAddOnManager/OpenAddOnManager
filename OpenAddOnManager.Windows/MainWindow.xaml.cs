@@ -12,6 +12,14 @@ namespace OpenAddOnManager.Windows
     {
         public MainWindow() => InitializeComponent();
 
+        async void CheckForAddOnUpdatesClickHandler(object sender, RoutedEventArgs e)
+        {
+            var addOnManager = Context.AddOnManager;
+            if (addOnManager.ActionState != AddOnManagerActionState.Idle)
+                return;
+            await addOnManager.UpdateAvailableAddOnsAsync();
+        }
+
         void ClosedHandler(object sender, EventArgs e)
         {
             Context.Dispose();
@@ -94,13 +102,6 @@ namespace OpenAddOnManager.Windows
             });
         });
 
-        async void RefreshListingsClickHandler(object sender, RoutedEventArgs e)
-        {
-            if (Context.AddOnManager.ActionState != AddOnManagerActionState.Idle)
-                return;
-            await Context.AddOnManager.UpdateAvailableAddOnsAsync();
-        }
-
         void SizeChangedHandler(object sender, SizeChangedEventArgs e)
         {
             if (WindowState == WindowState.Normal)
@@ -116,6 +117,14 @@ namespace OpenAddOnManager.Windows
             if (addOn.ActionState != AddOnActionState.Idle)
                 return;
             await addOn.DeleteAsync();
+        }
+
+        async void UpdateAllAddOnsClickHandler(object sender, RoutedEventArgs e)
+        {
+            var addOnManager = Context.AddOnManager;
+            if (addOnManager.ActionState != AddOnManagerActionState.Idle)
+                return;
+            await addOnManager.UpdateAllAddOns();
         }
 
         async void UpdateClickHandler(object sender, RoutedEventArgs e)

@@ -15,8 +15,8 @@
 
   <ItemGroup>
     <PackageReference Include="Gear.ActiveExpressions" Version="1.0.52" />
-    <PackageReference Include="Gear.ActiveQuery" Version="1.0.19" />
-    <PackageReference Include="Gear.Components" Version="1.0.110" />
+    <PackageReference Include="Gear.ActiveQuery" Version="1.0.20" />
+    <PackageReference Include="Gear.Components" Version="1.0.111" />
     <PackageReference Include="Gear.NamedPipesSingleInstance" Version="1.0.2" />
     <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.0.0" />
   </ItemGroup>

@@ -118,70 +118,64 @@ namespace OpenAddOnManager
         public Task<bool> DeleteAsync() => Task.Run(async () =>
         {
             await UninstallAsync().ConfigureAwait(false);
-            using (await addOnManager.AddOnsActing.ReaderLockAsync().ConfigureAwait(false))
+            ActionState = AddOnActionState.Deleting;
+            try
             {
-                ActionState = AddOnActionState.Deleting;
-                try
+                repositoryDirectory.Refresh();
+                if (repositoryDirectory.Exists)
                 {
-                    repositoryDirectory.Refresh();
-                    if (repositoryDirectory.Exists)
-                    {
-                        foreach (var fileSystemInfo in repositoryDirectory.GetFileSystemInfos("*.*", SearchOption.AllDirectories))
-                            fileSystemInfo.Attributes &= ~FileAttributes.ReadOnly;
-                        repositoryDirectory.Delete(true);
-                        OnPropertyChanged(nameof(IsDownloaded));
-                        return true;
-                    }
-                    return false;
+                    foreach (var fileSystemInfo in repositoryDirectory.GetFileSystemInfos("*.*", SearchOption.AllDirectories))
+                        fileSystemInfo.Attributes &= ~FileAttributes.ReadOnly;
+                    repositoryDirectory.Delete(true);
+                    OnPropertyChanged(nameof(IsDownloaded));
+                    return true;
                 }
-                finally
-                {
-                    ActionState = AddOnActionState.Idle;
-                }
+                return false;
+            }
+            finally
+            {
+                ActionState = AddOnActionState.Idle;
             }
         });
 
         public Task<bool> DownloadAsync() => Task.Run(async () =>
         {
-            using (await addOnManager.AddOnsActing.ReaderLockAsync().ConfigureAwait(false))
+            ActionState = AddOnActionState.Downloading;
+            try
             {
-                ActionState = AddOnActionState.Downloading;
-                try
+                repositoryDirectory.Refresh();
+                if (!repositoryDirectory.Exists)
+                    repositoryDirectory.Create();
+                if (repositoryDirectory.GetFileSystemInfos().Length == 0)
                 {
-                    repositoryDirectory.Refresh();
-                    if (!repositoryDirectory.Exists)
-                        repositoryDirectory.Create();
-                    if (repositoryDirectory.GetFileSystemInfos().Length == 0)
-                    {
-                        if (sourceBranch == null)
-                            Repository.Clone(sourceUrl.ToString(), repositoryDirectory.FullName);
-                        else
-                            Repository.Clone(sourceUrl.ToString(), repositoryDirectory.FullName, new CloneOptions { BranchName = sourceBranch });
-                        await LoadLicenseAsync().ConfigureAwait(false);
-                        return true;
-                    }
+                    if (sourceBranch == null)
+                        Repository.Clone(sourceUrl.ToString(), repositoryDirectory.FullName);
                     else
-                    {
-                        MergeStatus pullStatus;
-                        using (var repository = new Repository(repositoryDirectory.FullName))
-                            pullStatus = Commands.Pull(repository, new Signature(SignatureName, SignatureEmail, DateTimeOffset.Now), new PullOptions { MergeOptions = new MergeOptions { FastForwardStrategy = FastForwardStrategy.FastForwardOnly } }).Status;
-                        await LoadLicenseAsync().ConfigureAwait(false);
-                        if (pullStatus != MergeStatus.UpToDate)
-                            OnPropertyChanged(nameof(IsUpdateAvailable));
-                        return pullStatus == MergeStatus.FastForward;
-                    }
+                        Repository.Clone(sourceUrl.ToString(), repositoryDirectory.FullName, new CloneOptions { BranchName = sourceBranch });
+                    await LoadLicenseAsync().ConfigureAwait(false);
+                    return true;
                 }
-                catch (Exception ex)
+                else
                 {
-                    await DeleteAsync().ConfigureAwait(false);
-                    ExceptionDispatchInfo.Capture(ex).Throw();
-                    throw;
+                    MergeStatus pullStatus;
+                    using (var repository = new Repository(repositoryDirectory.FullName))
+                        pullStatus = Commands.Pull(repository, new Signature(SignatureName, SignatureEmail, DateTimeOffset.Now), new PullOptions { MergeOptions = new MergeOptions { FastForwardStrategy = FastForwardStrategy.FastForwardOnly } }).Status;
+                    await LoadLicenseAsync().ConfigureAwait(false);
+                    if (pullStatus != MergeStatus.UpToDate)
+                        OnPropertyChanged(nameof(IsUpdateAvailable));
+                    return pullStatus == MergeStatus.FastForward;
                 }
-                finally
-                {
-                    OnPropertyChanged(nameof(IsDownloaded));
-                    ActionState = AddOnActionState.Idle;
-                }
+            }
+            catch (Exception ex)
+            {
+                await DeleteAsync().ConfigureAwait(false);
+                ExceptionDispatchInfo.Capture(ex).Throw();
+                throw;
+            }
+            finally
+            {
+                OnPropertyChanged(nameof(IsDownloaded));
+                ActionState = AddOnActionState.Idle;
             }
         });
 
@@ -199,77 +193,74 @@ namespace OpenAddOnManager
             if (IsLicensed && !isLicenseAgreed)
                 throw new UserHasNotAgreedToLicenseException();
             await UninstallAsync(deleteSavedVariables: false).ConfigureAwait(false);
-            using (await addOnManager.AddOnsActing.ReaderLockAsync().ConfigureAwait(false))
+            ActionState = AddOnActionState.Installing;
+            try
             {
-                ActionState = AddOnActionState.Installing;
-                try
-                {
-                    var clientInterfaceDirectory = new DirectoryInfo(Path.Combine(client.Directory.FullName, "Interface"));
-                    if (!clientInterfaceDirectory.Exists)
-                        clientInterfaceDirectory.Create();
-                    var clientAddOnsDirectory = new DirectoryInfo(Path.Combine(clientInterfaceDirectory.FullName, "AddOns"));
-                    if (!clientAddOnsDirectory.Exists)
-                        clientAddOnsDirectory.Create();
-                    var installedFiles = new List<FileInfo>();
-                    var addOnsDirectory = repositoryDirectory.GetDirectories("AddOns", SearchOption.AllDirectories).SingleOrDefault();
-                    if (addOnsDirectory == null)
-                        addOnsDirectory = repositoryDirectory.GetFiles("*.toc", SearchOption.AllDirectories)
-                            .Select(tocFile => (tocFile, stepsFromRoot: Utilities.GetStepsUpFromDirectory(tocFile, repositoryDirectory)))
-                            .OrderBy(ts => ts.stepsFromRoot)
-                            .FirstOrDefault()
-                            .tocFile
-                            .Directory
-                            .Parent;
-                    else
-                        foreach (var resourceDirectory in addOnsDirectory.Parent.GetDirectories().Except(new DirectoryInfo[] { addOnsDirectory }))
-                        {
-                            var clientResourceDirectory = new DirectoryInfo(Path.Combine(clientInterfaceDirectory.FullName, resourceDirectory.Name));
-                            if (!clientResourceDirectory.Exists)
-                                clientResourceDirectory.Create();
-                            installedFiles.AddRange(resourceDirectory.CopyContentsTo(clientResourceDirectory, true));
-                        }
-                    var savedVariablesAddOnNames = new List<string>();
-                    var savedVariablesPerCharacterAddOnNames = new List<string>();
-
-                    async Task installAddOnAsync(DirectoryInfo addOnDirectory)
+                var clientInterfaceDirectory = new DirectoryInfo(Path.Combine(client.Directory.FullName, "Interface"));
+                if (!clientInterfaceDirectory.Exists)
+                    clientInterfaceDirectory.Create();
+                var clientAddOnsDirectory = new DirectoryInfo(Path.Combine(clientInterfaceDirectory.FullName, "AddOns"));
+                if (!clientAddOnsDirectory.Exists)
+                    clientAddOnsDirectory.Create();
+                var installedFiles = new List<FileInfo>();
+                var addOnsDirectory = repositoryDirectory.GetDirectories("AddOns", SearchOption.AllDirectories).SingleOrDefault();
+                if (addOnsDirectory == null)
+                    addOnsDirectory = repositoryDirectory.GetFiles("*.toc", SearchOption.AllDirectories)
+                        .Select(tocFile => (tocFile, stepsFromRoot: Utilities.GetStepsUpFromDirectory(tocFile, repositoryDirectory)))
+                        .OrderBy(ts => ts.stepsFromRoot)
+                        .FirstOrDefault()
+                        .tocFile
+                        .Directory
+                        .Parent;
+                else
+                    foreach (var resourceDirectory in addOnsDirectory.Parent.GetDirectories().Except(new DirectoryInfo[] { addOnsDirectory }))
                     {
-                        FileInfo tocFile;
-                        if (addOnDirectory == repositoryDirectory)
-                            tocFile = addOnDirectory.GetFiles($"*.toc").FirstOrDefault();
-                        else
-                            tocFile = addOnDirectory.GetFiles($"{addOnDirectory.Name}.toc").FirstOrDefault();
-                        if (tocFile != default)
-                        {
-                            var toc = await AddOnTableOfContents.LoadFromAsync(tocFile).ConfigureAwait(false);
-                            if (toc.SavedVariables?.Any() ?? false)
-                                savedVariablesAddOnNames.Add(addOnDirectory.Name);
-                            if (toc.SavedVariablesPerCharacter?.Any() ?? false)
-                                savedVariablesPerCharacterAddOnNames.Add(addOnDirectory.Name);
-                            var clientAddOnDirectory = new DirectoryInfo(Path.Combine(clientAddOnsDirectory.FullName, tocFile.Name.Substring(0, tocFile.Name.Length - tocFile.Extension.Length)));
-                            if (!clientAddOnDirectory.Exists)
-                                clientAddOnDirectory.Create();
-                            installedFiles.AddRange(addOnDirectory.CopyContentsTo(clientAddOnDirectory, overwrite: true));
-                        }
+                        var clientResourceDirectory = new DirectoryInfo(Path.Combine(clientInterfaceDirectory.FullName, resourceDirectory.Name));
+                        if (!clientResourceDirectory.Exists)
+                            clientResourceDirectory.Create();
+                        installedFiles.AddRange(resourceDirectory.CopyContentsTo(clientResourceDirectory, true));
                     }
+                var savedVariablesAddOnNames = new List<string>();
+                var savedVariablesPerCharacterAddOnNames = new List<string>();
 
-                    if (addOnsDirectory == repositoryDirectory.Parent)
-                        await installAddOnAsync(repositoryDirectory).ConfigureAwait(false);
-                    else
-                        foreach (var addOnDirectory in addOnsDirectory.GetDirectories())
-                            await installAddOnAsync(addOnDirectory).ConfigureAwait(false);
-                    using (var repository = new Repository(repositoryDirectory.FullName))
-                        installedSha = repository.Head.Tip.Sha;
-                    this.installedFiles = installedFiles.ToImmutableArray();
-                    this.savedVariablesAddOnNames = savedVariablesAddOnNames.ToImmutableArray();
-                    this.savedVariablesPerCharacterAddOnNames = savedVariablesPerCharacterAddOnNames.ToImmutableArray();
-                    OnPropertyChanged(nameof(IsInstalled));
-                    OnPropertyChanged(nameof(IsUpdateAvailable));
-                    SaveState();
-                }
-                finally
+                async Task installAddOnAsync(DirectoryInfo addOnDirectory)
                 {
-                    ActionState = AddOnActionState.Idle;
+                    FileInfo tocFile;
+                    if (addOnDirectory == repositoryDirectory)
+                        tocFile = addOnDirectory.GetFiles($"*.toc").FirstOrDefault();
+                    else
+                        tocFile = addOnDirectory.GetFiles($"{addOnDirectory.Name}.toc").FirstOrDefault();
+                    if (tocFile != default)
+                    {
+                        var toc = await AddOnTableOfContents.LoadFromAsync(tocFile).ConfigureAwait(false);
+                        if (toc.SavedVariables?.Any() ?? false)
+                            savedVariablesAddOnNames.Add(addOnDirectory.Name);
+                        if (toc.SavedVariablesPerCharacter?.Any() ?? false)
+                            savedVariablesPerCharacterAddOnNames.Add(addOnDirectory.Name);
+                        var clientAddOnDirectory = new DirectoryInfo(Path.Combine(clientAddOnsDirectory.FullName, tocFile.Name.Substring(0, tocFile.Name.Length - tocFile.Extension.Length)));
+                        if (!clientAddOnDirectory.Exists)
+                            clientAddOnDirectory.Create();
+                        installedFiles.AddRange(addOnDirectory.CopyContentsTo(clientAddOnDirectory, overwrite: true));
+                    }
                 }
+
+                if (addOnsDirectory == repositoryDirectory.Parent)
+                    await installAddOnAsync(repositoryDirectory).ConfigureAwait(false);
+                else
+                    foreach (var addOnDirectory in addOnsDirectory.GetDirectories())
+                        await installAddOnAsync(addOnDirectory).ConfigureAwait(false);
+                using (var repository = new Repository(repositoryDirectory.FullName))
+                    installedSha = repository.Head.Tip.Sha;
+                this.installedFiles = installedFiles.ToImmutableArray();
+                this.savedVariablesAddOnNames = savedVariablesAddOnNames.ToImmutableArray();
+                this.savedVariablesPerCharacterAddOnNames = savedVariablesPerCharacterAddOnNames.ToImmutableArray();
+                OnPropertyChanged(nameof(IsInstalled));
+                OnPropertyChanged(nameof(IsUpdateAvailable));
+                SaveState();
+            }
+            finally
+            {
+                ActionState = AddOnActionState.Idle;
             }
         });
 
@@ -319,82 +310,79 @@ namespace OpenAddOnManager
         {
             if (!IsInstalled)
                 return false;
-            using (await addOnManager.AddOnsActing.ReaderLockAsync().ConfigureAwait(false))
+            ActionState = AddOnActionState.Uninstalling;
+            try
             {
-                ActionState = AddOnActionState.Uninstalling;
-                try
+                var worldOfWacraftInstallation = addOnManager.WorldOfWarcraftInstallation;
+                if (worldOfWacraftInstallation == null)
+                    throw new WorldOfWarcraftInstallationUnavailableException();
+                await worldOfWacraftInstallation.InitializationComplete.ConfigureAwait(false);
+                if (!worldOfWacraftInstallation.ClientByReleaseChannelId.TryGetValue(releaseChannelId, out var client))
+                    throw new WorldOfWarcraftInstallationClientUnavailableException(releaseChannelId);
+                var clientInterfaceDirectory = new DirectoryInfo(Path.Combine(client.Directory.FullName, "Interface"));
+                if (!clientInterfaceDirectory.Exists)
+                    clientInterfaceDirectory.Create();
+                var clientAddOnsDirectory = new DirectoryInfo(Path.Combine(clientInterfaceDirectory.FullName, "AddOns"));
+                if (!clientAddOnsDirectory.Exists)
+                    clientAddOnsDirectory.Create();
+                var containerDirectories = new HashSet<DirectoryInfo>();
+                foreach (var installedFile in installedFiles)
                 {
-                    var worldOfWacraftInstallation = addOnManager.WorldOfWarcraftInstallation;
-                    if (worldOfWacraftInstallation == null)
-                        throw new WorldOfWarcraftInstallationUnavailableException();
-                    await worldOfWacraftInstallation.InitializationComplete.ConfigureAwait(false);
-                    if (!worldOfWacraftInstallation.ClientByReleaseChannelId.TryGetValue(releaseChannelId, out var client))
-                        throw new WorldOfWarcraftInstallationClientUnavailableException(releaseChannelId);
-                    var clientInterfaceDirectory = new DirectoryInfo(Path.Combine(client.Directory.FullName, "Interface"));
-                    if (!clientInterfaceDirectory.Exists)
-                        clientInterfaceDirectory.Create();
-                    var clientAddOnsDirectory = new DirectoryInfo(Path.Combine(clientInterfaceDirectory.FullName, "AddOns"));
-                    if (!clientAddOnsDirectory.Exists)
-                        clientAddOnsDirectory.Create();
-                    var containerDirectories = new HashSet<DirectoryInfo>();
-                    foreach (var installedFile in installedFiles)
+                    installedFile.Refresh();
+                    if (installedFile.Exists)
                     {
-                        installedFile.Refresh();
-                        if (installedFile.Exists)
-                        {
-                            containerDirectories.Add(installedFile.Directory);
-                            installedFile.Attributes &= ~FileAttributes.ReadOnly;
-                            installedFile.Delete();
-                        }
+                        containerDirectories.Add(installedFile.Directory);
+                        installedFile.Attributes &= ~FileAttributes.ReadOnly;
+                        installedFile.Delete();
                     }
-                    containerDirectories.Remove(clientInterfaceDirectory);
-                    containerDirectories.Remove(clientAddOnsDirectory);
-                    foreach (var containerDirectory in containerDirectories.OrderByDescending(containerDirectory => containerDirectory.FullName.Length))
-                    {
-                        containerDirectory.Refresh();
-                        if (containerDirectory.Exists && containerDirectory.GetFileSystemInfos().Length == 0)
-                            containerDirectory.Delete();
-                    }
-                    installedSha = null;
-                    installedFiles = null;
-                    if (deleteSavedVariables)
-                    {
-                        var wtfDirectory = new DirectoryInfo(Path.Combine(client.Directory.FullName, "WTF"));
-                        if (wtfDirectory.Exists)
-                        {
-                            var accountsDirectory = new DirectoryInfo(Path.Combine(wtfDirectory.FullName, "Account"));
-                            if (accountsDirectory.Exists)
-                                foreach (var accountDirectory in accountsDirectory.GetDirectories())
-                                {
-                                    var accountSavedVariablesDirectory = new DirectoryInfo(Path.Combine(accountDirectory.FullName, "SavedVariables"));
-                                    if (savedVariablesAddOnNames?.Count > 0 && accountSavedVariablesDirectory.Exists)
-                                        foreach (var savedVariablesAddOnName in savedVariablesAddOnNames)
-                                            foreach (var savedVariablesFile in accountSavedVariablesDirectory.GetFiles($"{savedVariablesAddOnName}.*"))
-                                                savedVariablesFile.Delete();
-                                    if (savedVariablesPerCharacterAddOnNames?.Count > 0)
-                                        foreach (var realmDirectory in accountDirectory.GetDirectories().Except(new DirectoryInfo[] { accountSavedVariablesDirectory }))
-                                            foreach (var characterDirectory in realmDirectory.GetDirectories())
-                                            {
-                                                var characterSavedVariablesDirectory = new DirectoryInfo(Path.Combine(characterDirectory.FullName, "SavedVariables"));
-                                                if (characterSavedVariablesDirectory.Exists)
-                                                    foreach (var savedVariablesPerCharacterAddOnName in savedVariablesPerCharacterAddOnNames)
-                                                        foreach (var savedVariablesFile in characterSavedVariablesDirectory.GetFiles($"{savedVariablesPerCharacterAddOnName}.*"))
-                                                            savedVariablesFile.Delete();
-                                            }
-                                }
-                        }
-                    }
-                    savedVariablesAddOnNames = null;
-                    savedVariablesPerCharacterAddOnNames = null;
-                    OnPropertyChanged(nameof(IsInstalled));
-                    OnPropertyChanged(nameof(IsUpdateAvailable));
-                    SaveState();
-                    return true;
                 }
-                finally
+                containerDirectories.Remove(clientInterfaceDirectory);
+                containerDirectories.Remove(clientAddOnsDirectory);
+                foreach (var containerDirectory in containerDirectories.OrderByDescending(containerDirectory => containerDirectory.FullName.Length))
                 {
-                    ActionState = AddOnActionState.Idle;
+                    containerDirectory.Refresh();
+                    if (containerDirectory.Exists && containerDirectory.GetFileSystemInfos().Length == 0)
+                        containerDirectory.Delete();
                 }
+                installedSha = null;
+                installedFiles = null;
+                if (deleteSavedVariables)
+                {
+                    var wtfDirectory = new DirectoryInfo(Path.Combine(client.Directory.FullName, "WTF"));
+                    if (wtfDirectory.Exists)
+                    {
+                        var accountsDirectory = new DirectoryInfo(Path.Combine(wtfDirectory.FullName, "Account"));
+                        if (accountsDirectory.Exists)
+                            foreach (var accountDirectory in accountsDirectory.GetDirectories())
+                            {
+                                var accountSavedVariablesDirectory = new DirectoryInfo(Path.Combine(accountDirectory.FullName, "SavedVariables"));
+                                if (savedVariablesAddOnNames?.Count > 0 && accountSavedVariablesDirectory.Exists)
+                                    foreach (var savedVariablesAddOnName in savedVariablesAddOnNames)
+                                        foreach (var savedVariablesFile in accountSavedVariablesDirectory.GetFiles($"{savedVariablesAddOnName}.*"))
+                                            savedVariablesFile.Delete();
+                                if (savedVariablesPerCharacterAddOnNames?.Count > 0)
+                                    foreach (var realmDirectory in accountDirectory.GetDirectories().Except(new DirectoryInfo[] { accountSavedVariablesDirectory }))
+                                        foreach (var characterDirectory in realmDirectory.GetDirectories())
+                                        {
+                                            var characterSavedVariablesDirectory = new DirectoryInfo(Path.Combine(characterDirectory.FullName, "SavedVariables"));
+                                            if (characterSavedVariablesDirectory.Exists)
+                                                foreach (var savedVariablesPerCharacterAddOnName in savedVariablesPerCharacterAddOnNames)
+                                                    foreach (var savedVariablesFile in characterSavedVariablesDirectory.GetFiles($"{savedVariablesPerCharacterAddOnName}.*"))
+                                                        savedVariablesFile.Delete();
+                                        }
+                            }
+                    }
+                }
+                savedVariablesAddOnNames = null;
+                savedVariablesPerCharacterAddOnNames = null;
+                OnPropertyChanged(nameof(IsInstalled));
+                OnPropertyChanged(nameof(IsUpdateAvailable));
+                SaveState();
+                return true;
+            }
+            finally
+            {
+                ActionState = AddOnActionState.Idle;
             }
         });
 
