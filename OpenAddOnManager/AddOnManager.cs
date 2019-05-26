@@ -38,7 +38,7 @@ namespace OpenAddOnManager
             StorageDirectory = storageDirectory;
             if (StorageDirectory != null)
             {
-                stateFile = new FileInfo(Path.Combine(StorageDirectory.FullName, "state.json"));
+                stateFile = new FileInfo(Path.Combine(StorageDirectory.FullName, "addOnManagerState.json"));
                 AddOnsDirectory = new DirectoryInfo(Path.Combine(StorageDirectory.FullName, "AddOnRepositories"));
             }
 

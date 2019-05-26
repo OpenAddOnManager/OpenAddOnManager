@@ -1,6 +1,8 @@
 using Gear.ActiveQuery;
 using MaterialDesignThemes.Wpf;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -77,14 +79,20 @@ namespace OpenAddOnManager.Windows
                 await addOn.InstallAsync();
         }
 
-        void LocationChangedHandler(object sender, EventArgs e)
+        void LoadedHandler(object sender, RoutedEventArgs e) => App.SafeguardWindowPosition(this);
+
+        void LocationChangedHandler(object sender, EventArgs e) => ThreadPool.QueueUserWorkItem(async state =>
         {
-            if (WindowState == WindowState.Normal)
+            await Task.Delay(25).ConfigureAwait(false);
+            await App.OnUiThreadAsync(() =>
             {
-                App.MainWindowLeft = Left;
-                App.MainWindowTop = Top;
-            }
-        }
+                if (WindowState == WindowState.Normal)
+                {
+                    App.MainWindowLeft = Left;
+                    App.MainWindowTop = Top;
+                }
+            });
+        });
 
         async void RefreshListingsClickHandler(object sender, RoutedEventArgs e)
         {

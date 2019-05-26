@@ -14,9 +14,9 @@
         WindowStartupLocation="CenterScreen"
 
         Closed="ClosedHandler"
+        Loaded="LoadedHandler"
         LocationChanged="LocationChangedHandler"
-        SizeChanged="SizeChangedHandler"
-        >
+        SizeChanged="SizeChangedHandler">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />

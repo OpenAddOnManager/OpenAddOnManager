@@ -1,6 +1,7 @@
 using Gear.NamedPipesSingleInstance;
 using MaterialDesignColors;
 using MaterialDesignThemes.Wpf;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,8 @@ namespace OpenAddOnManager.Windows
 {
     public partial class App : Application, INotifyPropertyChanged, INotifyPropertyChanging
     {
+        static App() => SystemEvents.DisplaySettingsChanged += SystemEventsDisplaySettingsChangedHandler;
+
         static AddOnManager addOnManager;
         static SynchronizationContext synchronizationContext;
         static WorldOfWarcraftInstallation worldOfWarcraftInstallation;
@@ -113,6 +116,16 @@ namespace OpenAddOnManager.Windows
             }
         });
 
+        static async void SystemEventsDisplaySettingsChangedHandler(object sender, EventArgs e)
+        {
+            if (Current != null)
+                await OnUiThreadAsync(() =>
+                {
+                    foreach (Window window in Current.Windows)
+                        SafeguardWindowPosition(window);
+                });
+        }
+
         public static double? MainWindowHeight { get; set; }
 
         public static double? MainWindowLeft { get; set; }
@@ -151,7 +164,7 @@ namespace OpenAddOnManager.Windows
 
             worldOfWarcraftInstallation = new WorldOfWarcraftInstallation(synchronizationContext: synchronizationContext);
             addOnManager = new AddOnManager(await Utilities.GetCommonStorageDirectoryAsync().ConfigureAwait(false), worldOfWarcraftInstallation, synchronizationContext);
-            stateFile = new FileInfo(Path.Combine(addOnManager.StorageDirectory.FullName, "app.json"));
+            stateFile = new FileInfo(Path.Combine(addOnManager.StorageDirectory.FullName, "appState.json"));
 
             if (stateFile.Exists)
             {
