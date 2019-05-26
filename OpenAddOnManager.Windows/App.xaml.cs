@@ -81,6 +81,25 @@ namespace OpenAddOnManager.Windows
                 Verb = "open"
             });
 
+        public static void SafeguardWindowPosition(Window window)
+        {
+            var closestWorkingArea = Screen.GetWorkingArea(window);
+            if (closestWorkingArea == Rect.Empty)
+                return;
+            if (window.Width > closestWorkingArea.Width)
+                window.Width = closestWorkingArea.Width;
+            if (window.Height > closestWorkingArea.Height)
+                window.Height = closestWorkingArea.Height;
+            if (window.Left < closestWorkingArea.Left)
+                window.Left = closestWorkingArea.Left;
+            if (window.Top < closestWorkingArea.Top)
+                window.Top = closestWorkingArea.Top;
+            if (window.Left + window.Width > closestWorkingArea.Right)
+                window.Left = closestWorkingArea.Right - window.Width;
+            if (window.Top + window.Height > closestWorkingArea.Bottom)
+                window.Top = closestWorkingArea.Bottom - window.Height;
+        }
+
         public static Task ShowMainWindowAsync() => OnUiThreadAsync(() =>
         {
             var mainWindow = Current.Windows.OfType<MainWindow>().FirstOrDefault();
