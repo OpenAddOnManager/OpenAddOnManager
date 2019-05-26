@@ -28,8 +28,15 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Image Grid.RowSpan="4" Grid.ColumnSpan="2" Source="http://www.manaobscura.com/wp-content/gallery/wow-bfa-alpha/WoWScrnShot_031918_195451.jpg" Stretch="UniformToFill" StretchDirection="Both" Visibility="{Binding Source={x:Static Application.Current}, Path=ThemeIsHorde, Mode=OneWay, Converter={StaticResource FalseIsVisibleValueConverter}}" />
-        <Image Grid.RowSpan="4" Grid.ColumnSpan="2" Source="https://i.redd.it/txww2egxp2k11.jpg" Stretch="UniformToFill" StretchDirection="Both" Visibility="{Binding Source={x:Static Application.Current}, Path=ThemeIsHorde, Mode=OneWay, Converter={StaticResource TrueIsVisibleValueConverter}}" />
+        <Image Grid.RowSpan="4" Grid.ColumnSpan="2" Stretch="UniformToFill" StretchDirection="Both">
+            <Image.Source>
+                <MultiBinding Mode="OneWay" Converter="{StaticResource ReleaseChannelFactionLuminanceToBackgroundMultiValueConverter}">
+                    <Binding Path="SelectedClient.ReleaseChannelId" Mode="OneWay" />
+                    <Binding Source="{x:Static Application.Current}" Path="ThemeIsHorde" Mode="OneWay" />
+                    <Binding Source="{x:Static Application.Current}" Path="ThemeIsDark" Mode="OneWay" />
+                </MultiBinding>
+            </Image.Source>
+        </Image>
         <Border Grid.RowSpan="3" Grid.ColumnSpan="2" Background="{DynamicResource MaterialDesignBackground}" Opacity="0.5" />
         <StackPanel Margin="8,8,0,0" VerticalAlignment="Center" Orientation="Horizontal">
             <md:PackIcon VerticalAlignment="Center" Kind="Search" Width="24" Height="24" />

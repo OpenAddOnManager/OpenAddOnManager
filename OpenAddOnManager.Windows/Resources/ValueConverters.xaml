@@ -11,5 +11,6 @@
     <vc:NotEqualToIsVisibleValueConverter x:Key="NotEqualToIsVisibleValueConverter" />
     <vc:NotEqualToValueConverter x:Key="NotEqualToValueConverter" />
     <vc:NotNullIsVisibleValueConverter x:Key="NotNullIsVisibleValueConverter" />
+    <vc:ReleaseChannelFactionLuminanceToBackgroundMultiValueConverter x:Key="ReleaseChannelFactionLuminanceToBackgroundMultiValueConverter" />
     <vc:TrueIsVisibleValueConverter x:Key="TrueIsVisibleValueConverter" />
 </ResourceDictionary>

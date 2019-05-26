@@ -26,4 +26,10 @@
     <ProjectReference Include="..\OpenAddOnManager\OpenAddOnManager.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Graphics\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
