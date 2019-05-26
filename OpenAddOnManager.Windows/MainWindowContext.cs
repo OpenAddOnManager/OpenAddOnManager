@@ -1,5 +1,8 @@
 using Gear.ActiveQuery;
 using Gear.Components;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 
 namespace OpenAddOnManager.Windows
@@ -38,6 +41,23 @@ namespace OpenAddOnManager.Windows
         }
 
         public AddOnManager AddOnManager { get; }
+
+        public IReadOnlyList<TimeSpan> ManifestsCheckFrequencyOptions { get; } = new TimeSpan[]
+        {
+            TimeSpan.FromMinutes(5),
+            TimeSpan.FromHours(0.25),
+            TimeSpan.FromHours(0.5),
+            TimeSpan.FromHours(1),
+            TimeSpan.FromHours(2),
+            TimeSpan.FromHours(4),
+            TimeSpan.FromHours(8),
+            TimeSpan.FromHours(12),
+            TimeSpan.FromDays(1),
+            TimeSpan.FromDays(2),
+            TimeSpan.FromDays(3),
+            TimeSpan.FromDays(7),
+            TimeSpan.FromDays(14)
+        }.ToImmutableArray();
 
         public string SearchFor
         {

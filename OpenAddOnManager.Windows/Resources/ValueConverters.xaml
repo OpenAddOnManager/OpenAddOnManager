@@ -13,5 +13,6 @@
     <vc:NotEqualToValueConverter x:Key="NotEqualToValueConverter" />
     <vc:NotNullIsVisibleValueConverter x:Key="NotNullIsVisibleValueConverter" />
     <vc:ReleaseChannelFactionLuminanceToBackgroundMultiValueConverter x:Key="ReleaseChannelFactionLuminanceToBackgroundMultiValueConverter" />
+    <vc:TimeSpanTextDescriptionValueConverter x:Key="TimeSpanTextDescriptionValueConverter" />
     <vc:TrueIsVisibleValueConverter x:Key="TrueIsVisibleValueConverter" />
 </ResourceDictionary>

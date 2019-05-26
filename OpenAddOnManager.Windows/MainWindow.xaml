@@ -4,7 +4,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:oam="clr-namespace:OpenAddOnManager;assembly=OpenAddOnManager"
-        xmlns:oamw="clr-namespace:OpenAddOnManager.Windows"
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
 
@@ -43,7 +42,7 @@
             <TextBox Width="200" VerticalAlignment="Center" md:HintAssist.Hint="Search for Add-Ons" Text="{Binding SearchFor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
         <StackPanel Grid.Column="1" Margin="0,8,8,0" VerticalAlignment="Center" Orientation="Horizontal">
-            <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniButton}" Click="CheckForAddOnUpdatesClickHandler" ToolTip="Check for Add-On Updates" md:ButtonProgressAssist.IsIndeterminate="True" md:ButtonProgressAssist.IsIndicatorVisible="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.CheckingForAddOnUpdates}}">
+            <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniButton}" Click="CheckForAddOnUpdatesClickHandler" ToolTip="Refresh Listings and Check for Add-On Updates" md:ButtonProgressAssist.IsIndeterminate="True" md:ButtonProgressAssist.IsIndicatorVisible="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.CheckingForAddOnUpdates}}">
                 <md:PackIcon Kind="CloudSearch" Width="24" Height="24" />
             </Button>
             <md:Badged Margin="0,0,8,0" BadgePlacementMode="BottomRight" Badge="{Binding AddOnManager.AddOnsWithUpdateAvailable, Mode=OneWay}" Visibility="{Binding AddOnManager.AddOnsWithUpdateAvailable, Mode=OneWay, Converter={StaticResource GreaterThanIsVisibleValueConverter}, ConverterParameter=0}">
@@ -68,7 +67,17 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="8" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="24" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="24" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <TextBlock Grid.ColumnSpan="3" Style="{StaticResource MaterialDesignTitleTextBlock}">APPEARANCE</TextBlock>
@@ -77,11 +86,24 @@
                     <ToggleButton Grid.Row="4" VerticalAlignment="Center" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsHorde, Mode=TwoWay}" />
                     <TextBlock Grid.Row="4" Grid.Column="2">Faction</TextBlock>
                     <TextBlock Grid.Row="6" Grid.ColumnSpan="3" Style="{StaticResource MaterialDesignTitleTextBlock}">LISTINGS</TextBlock>
-                    <ToggleButton Grid.Row="8" VerticalAlignment="Center" IsChecked="{Binding ShowPrereleaseVersions, Mode=TwoWay}" />
-                    <TextBlock Grid.Row="8" Grid.Column="2">Show Prerelease Versions</TextBlock>
-                    <TextBlock Grid.Row="10" Grid.ColumnSpan="3" Style="{StaticResource MaterialDesignCaptionTextBlock}">
-                        <Hyperlink NavigateUri="https://github.com/OpenAddOnManager/OpenAddOnManager"><Run Text="{Binding Source={x:Static Application.Current}, Path=VersionMoniker, Mode=OneTime}" /></Hyperlink>
-                    </TextBlock>
+                    <StackPanel Grid.Row="8" Grid.ColumnSpan="3"  Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center">Refresh listings every</TextBlock>
+                        <ComboBox Margin="8,0,0,0" VerticalAlignment="Center" ItemsSource="{Binding ManifestsCheckFrequencyOptions, Mode=OneTime}" SelectedItem="{Binding AddOnManager.ManifestsCheckFrequency, Mode=TwoWay}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource TimeSpanTextDescriptionValueConverter}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <ToggleButton Grid.Row="10" VerticalAlignment="Center" IsChecked="{Binding ShowPrereleaseVersions, Mode=TwoWay}" />
+                    <TextBlock Grid.Row="10" Grid.Column="2">Show Prerelease Versions</TextBlock>
+                    <Button Grid.Row="12" Grid.ColumnSpan="3" HorizontalAlignment="Left" Style="{StaticResource MaterialDesignRaisedButton}">LISTING SOURCES</Button>
+                    <TextBlock Grid.Row="14" Grid.ColumnSpan="3" Style="{StaticResource MaterialDesignTitleTextBlock}">UPDATES</TextBlock>
+                    <ToggleButton Grid.Row="16" VerticalAlignment="Center" IsChecked="{Binding AddOnManager.AutomaticallyUpdateAddOns, Mode=TwoWay}" />
+                    <TextBlock Grid.Row="16" Grid.Column="2">Automatically Update Add-Ons</TextBlock>
+                    <TextBlock Grid.Row="18" Grid.ColumnSpan="3" Style="{StaticResource MaterialDesignCaptionTextBlock}" Text="{Binding Source={x:Static Application.Current}, Path=VersionMoniker, Mode=OneTime}" />
+                    <Button Grid.Row="20" Grid.ColumnSpan="3" HorizontalAlignment="Left" Style="{StaticResource MaterialDesignRaisedButton}" Click="AppWebsiteClickHandler">APP WEBSITE</Button>
                 </Grid>
             </md:PopupBox>
         </StackPanel>

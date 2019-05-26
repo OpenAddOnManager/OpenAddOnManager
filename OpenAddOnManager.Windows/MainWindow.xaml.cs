@@ -12,6 +12,8 @@ namespace OpenAddOnManager.Windows
     {
         public MainWindow() => InitializeComponent();
 
+        void AppWebsiteClickHandler(object sender, RoutedEventArgs e) => App.OpenInBrowser(new Uri("https://github.com/OpenAddOnManager/OpenAddOnManager"));
+
         async void CheckForAddOnUpdatesClickHandler(object sender, RoutedEventArgs e)
         {
             var addOnManager = Context.AddOnManager;

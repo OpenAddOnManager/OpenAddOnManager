@@ -275,7 +275,11 @@ namespace OpenAddOnManager
         public bool AutomaticallyUpdateAddOns
         {
             get => automaticallyUpdateAddOns;
-            set => SetBackedProperty(ref automaticallyUpdateAddOns, in value);
+            set
+            {
+                if (SetBackedProperty(ref automaticallyUpdateAddOns, in value))
+                    SaveState();
+            }
         }
 
         public Task InitializationComplete { get; }
@@ -297,7 +301,11 @@ namespace OpenAddOnManager
             {
                 if (value < MinimumManifestsCheckFrequency)
                     throw new ArgumentOutOfRangeException();
-                SetBackedProperty(ref manifestsCheckFrequency, in value);
+                if (SetBackedProperty(ref manifestsCheckFrequency, in value))
+                {
+                    SaveState();
+                    ScheduleNextManifestsCheck();
+                }
             }
         }
 
