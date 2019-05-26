@@ -5,6 +5,8 @@ namespace OpenAddOnManager
 {
     public class AddOnManagerState
     {
+        public bool AutomaticallyUpdateAddOns { get; set; }
+
         public DateTimeOffset LastUpdatesCheck { get; set; }
 
         public TimeSpan ManifestsCheckFrequency { get; set; }

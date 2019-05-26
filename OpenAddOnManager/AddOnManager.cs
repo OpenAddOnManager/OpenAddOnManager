@@ -55,6 +55,7 @@ namespace OpenAddOnManager
         readonly SynchronizedObservableDictionary<Guid, AddOn> addOns;
         readonly IActiveEnumerable<AddOn> addOnsActiveEnumerable;
         readonly IActiveValue<int> addOnsWithUpdateAvailable;
+        bool automaticallyUpdateAddOns;
         readonly TaskCompletionSource<object> initializationCompleteTaskCompletionSource;
         DateTimeOffset lastUpdatesCheck;
         TimeSpan manifestsCheckFrequency = TimeSpan.FromDays(1);
@@ -113,6 +114,7 @@ namespace OpenAddOnManager
                         using (var streamReader = File.OpenText(stateFile.FullName))
                         using (var jsonReader = new JsonTextReader(streamReader))
                             addOnManagerState = JsonSerializer.CreateDefault().Deserialize<AddOnManagerState>(jsonReader);
+                        automaticallyUpdateAddOns = addOnManagerState.AutomaticallyUpdateAddOns;
                         lastUpdatesCheck = addOnManagerState.LastUpdatesCheck;
                         if (addOnManagerState.ManifestsCheckFrequency >= MinimumManifestsCheckFrequency)
                             manifestsCheckFrequency = addOnManagerState.ManifestsCheckFrequency;
@@ -147,6 +149,8 @@ namespace OpenAddOnManager
             try
             {
                 await UpdateAvailableAddOnsAsync().ConfigureAwait(false);
+                if (automaticallyUpdateAddOns && addOnsWithUpdateAvailable.Value > 0)
+                    await UpdateAllAddOns().ConfigureAwait(false);
             }
             finally
             {
@@ -166,6 +170,7 @@ namespace OpenAddOnManager
                 using (var jsonWriter = new JsonTextWriter(streamWriter))
                     JsonSerializer.CreateDefault().Serialize(jsonWriter, new AddOnManagerState
                     {
+                        AutomaticallyUpdateAddOns = automaticallyUpdateAddOns,
                         LastUpdatesCheck = lastUpdatesCheck,
                         ManifestsCheckFrequency = manifestsCheckFrequency,
                         ManifestUrls = (await ManifestUrls.GetAllAsync().ConfigureAwait(false)).ToList()
@@ -263,6 +268,12 @@ namespace OpenAddOnManager
         public DirectoryInfo AddOnsDirectory { get; }
 
         public int AddOnsWithUpdateAvailable => addOnsWithUpdateAvailable.Value;
+
+        public bool AutomaticallyUpdateAddOns
+        {
+            get => automaticallyUpdateAddOns;
+            set => SetBackedProperty(ref automaticallyUpdateAddOns, in value);
+        }
 
         public Task InitializationComplete { get; }
 
