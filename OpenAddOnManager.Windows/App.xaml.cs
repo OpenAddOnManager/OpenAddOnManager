@@ -138,26 +138,30 @@ namespace OpenAddOnManager.Windows
 
         public static bool ShowPrereleaseVersions { get; set; }
 
+        public static Version Version => Assembly.GetEntryAssembly().GetName().Version;
+
         public static string VersionMoniker
         {
             get
             {
-                var myVersion = Assembly.GetEntryAssembly().GetName().Version;
-                var moniker = new StringBuilder($"Open Add-On Manager for Windows v{myVersion.Major}.{myVersion.Minor}");
-                if (myVersion.Build > 0)
-                    moniker.Append($", patch {myVersion.Build}");
-                else if (myVersion.Revision > 0)
-                    moniker.Append($", revision {myVersion.Revision}");
+                var version = Version;
+                var moniker = new StringBuilder($"Open Add-On Manager for Windows v{version.Major}.{version.Minor}");
+                if (version.Build > 0)
+                    moniker.Append($", patch {version.Build}");
+                else if (version.Revision > 0)
+                    moniker.Append($", revision {version.Revision}");
                 return moniker.ToString();
             }
         }
 
         public App() => singleInstance = new SingleInstance("openaddonmanager", SecondaryInstanceMessageReceivedHandler);
 
+        Version availableVersion;
         readonly SingleInstance singleInstance;
         FileInfo stateFile;
         bool themeIsDark;
         bool themeIsHorde;
+        Timer updateAvailableVersion;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public event PropertyChangingEventHandler PropertyChanging;
@@ -177,6 +181,8 @@ namespace OpenAddOnManager.Windows
                 await singleInstance.SendMessageAsync("showmainwindow");
                 Environment.Exit(0);
             }
+
+            updateAvailableVersion = new Timer(UpdateAvailableVersion, null, TimeSpan.Zero, TimeSpan.FromDays(1));
 
             worldOfWarcraftInstallation = new WorldOfWarcraftInstallation(synchronizationContext: synchronizationContext);
             addOnManager = new AddOnManager(await Utilities.GetCommonStorageDirectoryAsync().ConfigureAwait(false), worldOfWarcraftInstallation, synchronizationContext);
@@ -279,6 +285,14 @@ namespace OpenAddOnManager.Windows
             }
             var theme = Theme.Create(themeIsDark ? (IBaseTheme)new MaterialDesignDarkTheme() : new MaterialDesignLightTheme(), primary, accent);
             Current.Resources.SetTheme(theme);
+        }
+
+        async void UpdateAvailableVersion(object state) => AvailableVersion = new Version(await AddOnManager.UsingHttpClient(httpClient => httpClient.GetStringAsync("https://raw.githubusercontent.com/OpenAddOnManager/OpenAddOnManager/master/OpenAddOnManager.Windows/VERSION")).ConfigureAwait(false));
+
+        public Version AvailableVersion
+        {
+            get => availableVersion;
+            private set => SetBackedProperty(ref availableVersion, in value);
         }
 
         public bool ThemeIsDark

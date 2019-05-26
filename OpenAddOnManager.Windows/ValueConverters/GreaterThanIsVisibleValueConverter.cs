@@ -7,7 +7,12 @@ namespace OpenAddOnManager.Windows.ValueConverters
 {
     public class GreaterThanIsVisibleValueConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => System.Convert.ToDouble(value) > System.Convert.ToDouble(parameter) ? Visibility.Visible : Visibility.Collapsed;
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is Version valueVersion && parameter is Version parameterVersion)
+                return valueVersion > parameterVersion ? Visibility.Visible : Visibility.Collapsed;
+            return System.Convert.ToDouble(value) > System.Convert.ToDouble(parameter) ? Visibility.Visible : Visibility.Collapsed;
+        }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => Binding.DoNothing;
     }

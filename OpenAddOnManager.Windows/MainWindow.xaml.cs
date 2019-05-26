@@ -43,6 +43,8 @@ namespace OpenAddOnManager.Windows
 
         void DonateClickHandler(object sender, RoutedEventArgs e) => App.OpenInBrowser(((AddOn)((Button)sender).DataContext).DonationsUrl);
 
+        void DownloadAppUpdateClickHandler(object sender, RoutedEventArgs e) => App.OpenInBrowser(new Uri("https://github.com/OpenAddOnManager/OpenAddOnManager/releases"));
+
         void EmailAddOnAuthorClickHandler(object sender, RoutedEventArgs e) => App.ComposeEmail(((AddOn)((Button)sender).DataContext).AuthorEmail);
 
         void InitializeClientTab(Panel clientTabPanel)

@@ -9,6 +9,7 @@
     <vc:FalseIsVisibleValueConverter x:Key="FalseIsVisibleValueConverter" />
     <vc:GreaterThanIsVisibleValueConverter x:Key="GreaterThanIsVisibleValueConverter" />
     <vc:NegateValueConverter x:Key="NegateValueConverter" />
+    <vc:NewVersionIsRefreshIconValueConverter x:Key="NewVersionIsRefreshIconValueConverter" />
     <vc:NotEqualToIsVisibleValueConverter x:Key="NotEqualToIsVisibleValueConverter" />
     <vc:NotEqualToValueConverter x:Key="NotEqualToValueConverter" />
     <vc:NotNullIsVisibleValueConverter x:Key="NotNullIsVisibleValueConverter" />

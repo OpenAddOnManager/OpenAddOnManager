@@ -20,6 +20,40 @@ namespace OpenAddOnManager
     {
         static readonly TimeSpan never = TimeSpan.FromMilliseconds(-1);
 
+        public static async Task UsingHttpClient(Func<HttpClient, Task> asyncAction)
+        {
+            var assembly = Assembly.GetEntryAssembly().GetName().Version;
+            using (var httpClientHandler = new HttpClientHandler
+            {
+                AllowAutoRedirect = true,
+                AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip,
+                CookieContainer = new CookieContainer(),
+                UseCookies = true
+            })
+            using (var httpClient = new HttpClient(httpClientHandler))
+            {
+                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"OpenAddOnManager/{assembly.Major}.{assembly.Minor}");
+                await asyncAction(httpClient).ConfigureAwait(false);
+            }
+        }
+
+        public static async Task<T> UsingHttpClient<T>(Func<HttpClient, Task<T>> asyncFunc)
+        {
+            var assembly = Assembly.GetEntryAssembly().GetName().Version;
+            using (var httpClientHandler = new HttpClientHandler
+            {
+                AllowAutoRedirect = true,
+                AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip,
+                CookieContainer = new CookieContainer(),
+                UseCookies = true
+            })
+            using (var httpClient = new HttpClient(httpClientHandler))
+            {
+                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"OpenAddOnManager/{assembly.Major}.{assembly.Minor}");
+                return await asyncFunc(httpClient).ConfigureAwait(false);
+            }
+        }
+
         public static IReadOnlyList<Uri> DefaultManifestUrls { get; } = new Uri[]
         {
             new Uri("https://raw.githubusercontent.com/OpenAddOnManager/OpenAddOnManager/master/addOns.json")
@@ -73,20 +107,6 @@ namespace OpenAddOnManager
         {
             if (e.PropertyName == nameof(IActiveValue<int>.Value))
                 OnPropertyChanged(nameof(AddOnsWithUpdateAvailable));
-        }
-
-        HttpClient CreateHttpClient()
-        {
-            var assembly = Assembly.GetExecutingAssembly().GetName().Version;
-            var httpClient = new HttpClient(new HttpClientHandler
-            {
-                AllowAutoRedirect = true,
-                AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip,
-                CookieContainer = new CookieContainer(),
-                UseCookies = true
-            });
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"OpenAddOnManager/{assembly.Major}.{assembly.Minor}");
-            return httpClient;
         }
 
         protected override void Dispose(bool disposing)
@@ -212,7 +232,8 @@ namespace OpenAddOnManager
             {
                 var addOnKeysInManifests = new HashSet<Guid>();
                 var jsonSerializer = JsonSerializer.CreateDefault();
-                using (var httpClient = CreateHttpClient())
+                await UsingHttpClient(async httpClient =>
+                {
                     foreach (var manifestUrl in await ManifestUrls.GetAllAsync().ConfigureAwait(false))
                     {
                         try
@@ -243,6 +264,7 @@ namespace OpenAddOnManager
                             // TODO: tell user manifest is bad
                         }
                     }
+                });
                 await addOns.RemoveAllAsync((addOnKey, addOn) => !addOnKeysInManifests.Contains(addOnKey)).ConfigureAwait(false);
                 var downloadingTasks = new List<Task>();
                 foreach (var addOnKey in await addOns.GetAllKeysAsync().ConfigureAwait(false))
