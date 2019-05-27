@@ -15,12 +15,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using ToastNotifications;
 using ToastNotifications.Core;
 using ToastNotifications.Lifetime;
-using ToastNotifications.Messages;
 using ToastNotifications.Position;
 
 namespace OpenAddOnManager.Windows
@@ -31,7 +29,7 @@ namespace OpenAddOnManager.Windows
 
         static AddOnManager addOnManager;
         const string runKeyPath = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
-        const string runValueName = "Grindstone 4";
+        const string runValueName = "Open Add-On Manager";
         static SynchronizationContext synchronizationContext;
         static WorldOfWarcraftInstallation worldOfWarcraftInstallation;
 
@@ -143,7 +141,7 @@ namespace OpenAddOnManager.Windows
             get
             {
                 var path = Uri.UnescapeDataString(new UriBuilder(Assembly.GetEntryAssembly().CodeBase).Path);
-                return $"{Path.GetDirectoryName(path)}\\{Path.GetFileName(path)}";
+                return $"{Path.GetDirectoryName(path)}\\{Path.GetFileName(path).Replace(".dll", ".exe", StringComparison.OrdinalIgnoreCase)}";
             }
         }
 
