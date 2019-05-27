@@ -81,6 +81,8 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="8" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <TextBlock Grid.ColumnSpan="3" Style="{StaticResource MaterialDesignTitleTextBlock}">APPEARANCE</TextBlock>
                         <ToggleButton Grid.Row="2" VerticalAlignment="Center" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsDark, Mode=TwoWay}" />
@@ -109,6 +111,8 @@
                             <Button Margin="0,0,0,8" HorizontalAlignment="Left" Style="{StaticResource MaterialDesignRaisedAccentButton}" Click="DownloadAppUpdateClickHandler" Visibility="{Binding Source={x:Static Application.Current}, Path=AvailableVersion, Mode=OneWay, Converter={StaticResource GreaterThanIsVisibleValueConverter}, ConverterParameter={x:Static oamw:App.Version}}">GET APP RELEASE</Button>
                             <Button HorizontalAlignment="Left" Style="{StaticResource MaterialDesignRaisedButton}" Click="AppWebsiteClickHandler">APP WEBSITE</Button>
                         </StackPanel>
+                        <ToggleButton Grid.Row="22" VerticalAlignment="Center" IsChecked="{Binding Source={x:Static Application.Current}, Path=RunAtStartup, Mode=TwoWay}" />
+                        <TextBlock Grid.Row="22" Grid.Column="2">Start with Windows</TextBlock>
                     </Grid>
                 </md:PopupBox>
             </md:Badged>

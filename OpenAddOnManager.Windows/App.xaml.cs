@@ -24,6 +24,8 @@ namespace OpenAddOnManager.Windows
         static App() => SystemEvents.DisplaySettingsChanged += SystemEventsDisplaySettingsChangedHandler;
 
         static AddOnManager addOnManager;
+        const string runKeyPath = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+        const string runValueName = "Grindstone 4";
         static SynchronizationContext synchronizationContext;
         static WorldOfWarcraftInstallation worldOfWarcraftInstallation;
 
@@ -35,9 +37,11 @@ namespace OpenAddOnManager.Windows
                 Verb = "open"
             });
 
-        static Task CreateMainWindow() => OnUiThreadAsync(() =>
+        static Task CreateMainWindow(bool openMinimized = false) => OnUiThreadAsync(() =>
         {
             var mainWindow = new MainWindow { DataContext = new MainWindowContext(addOnManager) };
+            if (openMinimized)
+                mainWindow.WindowState = WindowState.Minimized;
             if (MainWindowHeight != null && MainWindowLeft != null && MainWindowTop != null && MainWindowWidth != null)
             {
                 mainWindow.WindowStartupLocation = WindowStartupLocation.Manual;
@@ -128,6 +132,15 @@ namespace OpenAddOnManager.Windows
                 });
         }
 
+        public static string ExecutablePath
+        {
+            get
+            {
+                var path = Uri.UnescapeDataString(new UriBuilder(Assembly.GetEntryAssembly().CodeBase).Path);
+                return $"{Path.GetDirectoryName(path)}\\{Path.GetFileName(path)}";
+            }
+        }
+
         public static double? MainWindowHeight { get; set; }
 
         public static double? MainWindowLeft { get; set; }
@@ -201,7 +214,7 @@ namespace OpenAddOnManager.Windows
                 await OnUiThreadAsync(() => SetTheme()).ConfigureAwait(false);
             }
 
-            await CreateMainWindow().ConfigureAwait(false);
+            await CreateMainWindow(openMinimized: Environment.GetCommandLineArgs().Contains("-startMinimized", StringComparer.OrdinalIgnoreCase)).ConfigureAwait(false);
         }
 
         protected override void OnExit(ExitEventArgs e) => singleInstance.Dispose();
@@ -293,6 +306,29 @@ namespace OpenAddOnManager.Windows
         {
             get => availableVersion;
             private set => SetBackedProperty(ref availableVersion, in value);
+        }
+
+        public bool RunAtStartup
+        {
+            get
+            {
+                using (var run = Registry.CurrentUser.OpenSubKey(runKeyPath))
+                {
+                    var runValue = run?.GetValue(runValueName, null);
+                    return runValue != null && runValue is string && ((string)runValue).IndexOf(ExecutablePath, StringComparison.OrdinalIgnoreCase) >= 0;
+                }
+            }
+            set
+            {
+                var currentRunAtStartup = RunAtStartup;
+                using (var runKey = Registry.CurrentUser.CreateSubKey(runKeyPath))
+                {
+                    if (value && !currentRunAtStartup)
+                        runKey.SetValue(runValueName, $"\"{ExecutablePath}\" -startMinimized");
+                    else if (!value && currentRunAtStartup)
+                        runKey.DeleteValue(runValueName, false);
+                }
+            }
         }
 
         public bool ThemeIsDark
