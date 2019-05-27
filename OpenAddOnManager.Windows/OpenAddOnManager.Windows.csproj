@@ -23,6 +23,8 @@
     <PackageReference Include="Gear.Components" Version="1.0.111" />
     <PackageReference Include="Gear.NamedPipesSingleInstance" Version="1.0.2" />
     <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
+    <PackageReference Include="ToastNotifications.Messages" Version="2.5.1" />
   </ItemGroup>
 
   <ItemGroup>

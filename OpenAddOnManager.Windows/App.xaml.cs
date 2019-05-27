@@ -15,7 +15,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
+using ToastNotifications;
+using ToastNotifications.Core;
+using ToastNotifications.Lifetime;
+using ToastNotifications.Messages;
+using ToastNotifications.Position;
 
 namespace OpenAddOnManager.Windows
 {
@@ -167,7 +173,11 @@ namespace OpenAddOnManager.Windows
             }
         }
 
-        public App() => singleInstance = new SingleInstance("openaddonmanager", SecondaryInstanceMessageReceivedHandler);
+        public App()
+        {
+            singleInstance = new SingleInstance("openaddonmanager", SecondaryInstanceMessageReceivedHandler);
+            Notifier = new Notifier(ConfigureNotifier);
+        }
 
         Version availableVersion;
         readonly SingleInstance singleInstance;
@@ -217,7 +227,19 @@ namespace OpenAddOnManager.Windows
             await CreateMainWindow(openMinimized: Environment.GetCommandLineArgs().Contains("-startMinimized", StringComparer.OrdinalIgnoreCase)).ConfigureAwait(false);
         }
 
-        protected override void OnExit(ExitEventArgs e) => singleInstance.Dispose();
+        protected override void OnExit(ExitEventArgs e)
+        {
+            Notifier.Dispose();
+            singleInstance.Dispose();
+        }
+
+        void ConfigureNotifier(NotifierConfiguration cfg)
+        {
+            cfg.Dispatcher = Dispatcher;
+            cfg.DisplayOptions.TopMost = true;
+            cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(TimeSpan.FromSeconds(10), MaximumNotificationCount.FromCount(5));
+            cfg.PositionProvider = new GdiPrimaryScreenPositionProvider(Corner.BottomRight, 0, 0);
+        }
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -307,6 +329,8 @@ namespace OpenAddOnManager.Windows
             get => availableVersion;
             private set => SetBackedProperty(ref availableVersion, in value);
         }
+
+        public Notifier Notifier { get; }
 
         public bool RunAtStartup
         {
