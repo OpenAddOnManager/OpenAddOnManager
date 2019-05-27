@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace OpenAddOnManager
@@ -15,8 +14,13 @@ namespace OpenAddOnManager
             return directory;
         });
 
-        public static string GetReleaseChannelNameFromId(string releaseChannelIdentifier) =>
-            string.Join(" ", releaseChannelIdentifier[1..^1].Split('_').Select(word => $"{char.ToUpperInvariant(word[0])}{word.Substring(1)}"));
+        public static string GetFlavorName(Flavor flavor) => flavor switch
+        {
+            Flavor.wow => "Release",
+            Flavor.wowt => "PTR",
+            Flavor.wow_classic_beta => "Classic Beta",
+            _ => throw new NotSupportedException()
+        };
 
         public static int GetStepsUpFromDirectory(FileInfo file, DirectoryInfo directory)
         {

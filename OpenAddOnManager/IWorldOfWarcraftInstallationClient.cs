@@ -9,7 +9,7 @@ namespace OpenAddOnManager
         DirectoryInfo Directory { get; }
         FileInfo Executible { get; }
         IWorldOfWarcraftInstallation Installation { get; }
-        string ReleaseChannelId { get; }
-        string ReleaseChannelName { get; }
+        Flavor Flavor { get; }
+        string FlavorName { get; }
     }
 }

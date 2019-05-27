@@ -30,7 +30,7 @@
     "51daaeac-4e71-4745-af85-6f8424aee426": {
         "name": "Blank Add-On",
         "description": "This is a World of Warcraft add-on that does absolutely nothing. It's used to test Open Add-On Manager.",
-        "releaseChannelId": "_ptr_",
+        "flavor": "wowt",
         "iconUrl": "https://raw.githubusercontent.com/OpenAddOnManager/BlankAddOn/ptr/master/blank.png",
 
         "sourceUrl": "https://github.com/OpenAddOnManager/BlankAddOn.git",
@@ -45,7 +45,7 @@
     "107cf32d-191b-4e1d-ab2d-63801fd12d6e": {
         "name": "Blank Add-On",
         "description": "This is a World of Warcraft add-on that does absolutely nothing. It's used to test Open Add-On Manager.",
-        "releaseChannelId": "_ptr_",
+        "flavor": "wowt",
         "iconUrl": "https://raw.githubusercontent.com/OpenAddOnManager/BlankAddOn/ptr/test/blank.png",
 
         "sourceUrl": "https://github.com/OpenAddOnManager/BlankAddOn.git",
@@ -61,7 +61,7 @@
     "98ffc22d-4c6b-4004-9f07-65401976ce10": {
         "name": "Blank Add-On",
         "description": "This is a World of Warcraft add-on that does absolutely nothing. It's used to test Open Add-On Manager.",
-        "releaseChannelId": "_classic_beta_",
+        "flavor": "wow_classic_beta",
         "iconUrl": "https://raw.githubusercontent.com/OpenAddOnManager/BlankAddOn/classic/master/blank.png",
 
         "sourceUrl": "https://github.com/OpenAddOnManager/BlankAddOn.git",
@@ -76,7 +76,7 @@
     "fc500c98-0d39-4310-8e81-162c12c9db72": {
         "name": "Blank Add-On",
         "description": "This is a World of Warcraft add-on that does absolutely nothing. It's used to test Open Add-On Manager.",
-        "releaseChannelId": "_classic_beta_",
+        "flavor": "wow_classic_beta",
         "iconUrl": "https://raw.githubusercontent.com/OpenAddOnManager/BlankAddOn/classic/test/blank.png",
 
         "sourceUrl": "https://github.com/OpenAddOnManager/BlankAddOn.git",

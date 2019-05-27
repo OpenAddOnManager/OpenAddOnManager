@@ -7,7 +7,7 @@ namespace OpenAddOnManager
 {
     public interface IWorldOfWarcraftInstallation
     {
-        IReadOnlyDictionary<string, IWorldOfWarcraftInstallationClient> ClientByReleaseChannelId { get; }
+        IReadOnlyDictionary<Flavor, IWorldOfWarcraftInstallationClient> ClientByFlavor { get; }
         IActiveEnumerable<IWorldOfWarcraftInstallationClient> Clients { get; }
         DirectoryInfo Directory { get; }
         Task InitializationComplete { get; }

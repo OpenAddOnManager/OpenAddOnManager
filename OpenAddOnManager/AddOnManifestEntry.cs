@@ -1,10 +1,12 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 
 namespace OpenAddOnManager
 {
     public class AddOnManifestEntry
     {
-        public AddOnManifestEntry() => ReleaseChannelId = "_retail_";
+        public AddOnManifestEntry() => Flavor = Flavor.wow;
 
         public Uri AddOnPageUrl { get; set; }
 
@@ -24,7 +26,8 @@ namespace OpenAddOnManager
 
         public string Name { get; set; }
 
-        public string ReleaseChannelId { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public Flavor Flavor { get; set; }
 
         public string SourceBranch { get; set; }
 

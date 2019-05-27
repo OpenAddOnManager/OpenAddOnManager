@@ -95,7 +95,7 @@ namespace OpenAddOnManager.Windows.Tests
             using (var installation = new WorldOfWarcraftInstallation())
             {
                 await installation.InitializationComplete;
-                Assert.IsTrue(installation.ClientByReleaseChannelId.ContainsKey("_retail_"));
+                Assert.IsTrue(installation.ClientByFlavor.ContainsKey("_retail_"));
             }
         }
     }

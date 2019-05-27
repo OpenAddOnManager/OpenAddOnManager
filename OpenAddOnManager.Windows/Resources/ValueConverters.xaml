@@ -7,13 +7,13 @@
     <vc:EqualToIsVisibleValueConverter x:Key="EqualToIsVisibleValueConverter" />
     <vc:EqualToValueConverter x:Key="EqualToValueConverter" />
     <vc:FalseIsVisibleValueConverter x:Key="FalseIsVisibleValueConverter" />
+    <vc:FlavorFactionLuminanceToBackgroundMultiValueConverter x:Key="FlavorFactionLuminanceToBackgroundMultiValueConverter" />
     <vc:GreaterThanIsVisibleValueConverter x:Key="GreaterThanIsVisibleValueConverter" />
     <vc:NegateValueConverter x:Key="NegateValueConverter" />
     <vc:NewVersionIsRefreshIconValueConverter x:Key="NewVersionIsRefreshIconValueConverter" />
     <vc:NotEqualToIsVisibleValueConverter x:Key="NotEqualToIsVisibleValueConverter" />
     <vc:NotEqualToValueConverter x:Key="NotEqualToValueConverter" />
     <vc:NotNullIsVisibleValueConverter x:Key="NotNullIsVisibleValueConverter" />
-    <vc:ReleaseChannelFactionLuminanceToBackgroundMultiValueConverter x:Key="ReleaseChannelFactionLuminanceToBackgroundMultiValueConverter" />
     <vc:TimeSpanTextDescriptionValueConverter x:Key="TimeSpanTextDescriptionValueConverter" />
     <vc:TrueIsVisibleValueConverter x:Key="TrueIsVisibleValueConverter" />
 </ResourceDictionary>

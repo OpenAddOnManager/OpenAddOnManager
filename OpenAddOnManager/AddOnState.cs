@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 
@@ -31,7 +33,8 @@ namespace OpenAddOnManager
 
         public string Name { get; set; }
 
-        public string ReleaseChannelId { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public Flavor Flavor { get; set; }
 
         public List<string> SavedVariablesAddOnNames { get; set; }
 

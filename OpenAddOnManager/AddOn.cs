@@ -46,14 +46,14 @@ namespace OpenAddOnManager
                 isPrereleaseVersion = state.IsPrereleaseVersion;
                 license = state.License;
                 name = state.Name;
-                releaseChannelId = state.ReleaseChannelId;
+                flavor = state.Flavor;
                 savedVariablesAddOnNames = state.SavedVariablesAddOnNames?.ToImmutableArray();
                 savedVariablesPerCharacterAddOnNames = state.SavedVariablesPerCharacterAddOnNames?.ToImmutableArray();
                 sourceBranch = state.SourceBranch;
                 sourceUrl = state.SourceUrl;
                 supportUrl = state.SupportUrl;
                 var worldOfWarcraftInstallation = this.addOnManager.WorldOfWarcraftInstallation;
-                if (worldOfWarcraftInstallation != null && worldOfWarcraftInstallation.ClientByReleaseChannelId.TryGetValue(releaseChannelId, out var client))
+                if (worldOfWarcraftInstallation != null && worldOfWarcraftInstallation.ClientByFlavor.TryGetValue(flavor, out var client))
                 {
                     var clientPath = client.Directory.FullName;
                     installedFiles = state.InstalledFiles?.Select(installedFile => new FileInfo(Path.Combine(clientPath, installedFile))).ToImmutableArray();
@@ -73,7 +73,7 @@ namespace OpenAddOnManager
             iconUrl = addOnManifestEntry.IconUrl;
             isPrereleaseVersion = addOnManifestEntry.IsPrereleaseVersion;
             name = addOnManifestEntry.Name;
-            releaseChannelId = addOnManifestEntry.ReleaseChannelId;
+            flavor = addOnManifestEntry.Flavor;
             sourceBranch = addOnManifestEntry.SourceBranch;
             sourceUrl = addOnManifestEntry.SourceUrl;
             supportUrl = addOnManifestEntry.SupportUrl;
@@ -95,7 +95,7 @@ namespace OpenAddOnManager
         bool isPrereleaseVersion;
         string license;
         string name;
-        string releaseChannelId;
+        Flavor flavor;
         readonly DirectoryInfo repositoryDirectory;
         IReadOnlyList<string> savedVariablesAddOnNames;
         IReadOnlyList<string> savedVariablesPerCharacterAddOnNames;
@@ -189,8 +189,8 @@ namespace OpenAddOnManager
             if (worldOfWacraftInstallation == null)
                 throw new WorldOfWarcraftInstallationUnavailableException();
             await worldOfWacraftInstallation.InitializationComplete.ConfigureAwait(false);
-            if (!worldOfWacraftInstallation.ClientByReleaseChannelId.TryGetValue(releaseChannelId, out var client))
-                throw new WorldOfWarcraftInstallationClientUnavailableException(releaseChannelId);
+            if (!worldOfWacraftInstallation.ClientByFlavor.TryGetValue(flavor, out var client))
+                throw new WorldOfWarcraftInstallationClientUnavailableException(flavor);
             if (IsLicensed && !isLicenseAgreed)
                 throw new UserHasNotAgreedToLicenseException();
             await UninstallAsync(deleteSavedVariables: false).ConfigureAwait(false);
@@ -292,13 +292,13 @@ namespace OpenAddOnManager
                         Description = description,
                         DonationsUrl = donationsUrl,
                         IconUrl = iconUrl,
-                        InstalledFiles = installedFiles?.Select(installedFile => installedFile.FullName.Substring(addOnManager.WorldOfWarcraftInstallation.ClientByReleaseChannelId[releaseChannelId].Directory.FullName.Length + 1)).ToList(),
+                        InstalledFiles = installedFiles?.Select(installedFile => installedFile.FullName.Substring(addOnManager.WorldOfWarcraftInstallation.ClientByFlavor[flavor].Directory.FullName.Length + 1)).ToList(),
                         InstalledSha = installedSha,
                         IsLicenseAgreed = isLicenseAgreed,
                         IsPrereleaseVersion = isPrereleaseVersion,
                         License = license,
                         Name = name,
-                        ReleaseChannelId = releaseChannelId,
+                        Flavor = flavor,
                         SavedVariablesAddOnNames = savedVariablesAddOnNames?.ToList(),
                         SavedVariablesPerCharacterAddOnNames = savedVariablesPerCharacterAddOnNames?.ToList(),
                         SourceBranch = sourceBranch,
@@ -318,8 +318,8 @@ namespace OpenAddOnManager
                 if (worldOfWacraftInstallation == null)
                     throw new WorldOfWarcraftInstallationUnavailableException();
                 await worldOfWacraftInstallation.InitializationComplete.ConfigureAwait(false);
-                if (!worldOfWacraftInstallation.ClientByReleaseChannelId.TryGetValue(releaseChannelId, out var client))
-                    throw new WorldOfWarcraftInstallationClientUnavailableException(releaseChannelId);
+                if (!worldOfWacraftInstallation.ClientByFlavor.TryGetValue(flavor, out var client))
+                    throw new WorldOfWarcraftInstallationClientUnavailableException(flavor);
                 var clientInterfaceDirectory = new DirectoryInfo(Path.Combine(client.Directory.FullName, "Interface"));
                 if (!clientInterfaceDirectory.Exists)
                     clientInterfaceDirectory.Create();
@@ -400,11 +400,11 @@ namespace OpenAddOnManager
             Name = addOnManifestEntry.Name;
             SupportUrl = addOnManifestEntry.SupportUrl;
 
-            if (releaseChannelId != addOnManifestEntry.ReleaseChannelId || sourceBranch != addOnManifestEntry.SourceBranch || sourceUrl != addOnManifestEntry.SourceUrl)
+            if (flavor != addOnManifestEntry.Flavor || sourceBranch != addOnManifestEntry.SourceBranch || sourceUrl != addOnManifestEntry.SourceUrl)
             {
                 var wasInstalled = await UninstallAsync(deleteSavedVariables: false).ConfigureAwait(false);
                 var wasDownloaded = await DeleteAsync().ConfigureAwait(false);
-                ReleaseChannelId = addOnManifestEntry.ReleaseChannelId;
+                Flavor = addOnManifestEntry.Flavor;
                 SourceBranch = addOnManifestEntry.SourceBranch;
                 SourceUrl = addOnManifestEntry.SourceUrl;
                 if (wasDownloaded)
@@ -518,10 +518,10 @@ namespace OpenAddOnManager
             private set => SetBackedProperty(ref name, in value);
         }
 
-        public string ReleaseChannelId
+        public Flavor Flavor
         {
-            get => releaseChannelId;
-            private set => SetBackedProperty(ref releaseChannelId, in value);
+            get => flavor;
+            private set => SetBackedProperty(ref flavor, in value);
         }
 
         public string SourceBranch

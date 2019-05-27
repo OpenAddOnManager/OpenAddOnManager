@@ -13,6 +13,7 @@
     <None Remove="AddOnDisplayPart.xaml" />
     <None Remove="InstalledDogEar.xaml" />
     <None Remove="ManifestsDialog.xaml" />
+    <None Remove="oam-setup.exe" />
     <None Remove="PrereleaseVersionDogEar.xaml" />
     <None Remove="Resources\ValueConverters.xaml" />
     <None Remove="Resources\WindowStyles.xaml" />

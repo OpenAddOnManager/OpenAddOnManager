@@ -30,8 +30,8 @@
         </Grid.RowDefinitions>
         <Image Grid.RowSpan="4" Grid.ColumnSpan="2" Stretch="UniformToFill" StretchDirection="Both">
             <Image.Source>
-                <MultiBinding Mode="OneWay" Converter="{StaticResource ReleaseChannelFactionLuminanceToBackgroundMultiValueConverter}">
-                    <Binding Path="SelectedClient.ReleaseChannelId" Mode="OneWay" />
+                <MultiBinding Mode="OneWay" Converter="{StaticResource FlavorFactionLuminanceToBackgroundMultiValueConverter}">
+                    <Binding Path="SelectedClient.Flavor" Mode="OneWay" />
                     <Binding Source="{x:Static Application.Current}" Path="ThemeIsHorde" Mode="OneWay" />
                     <Binding Source="{x:Static Application.Current}" Path="ThemeIsDark" Mode="OneWay" />
                 </MultiBinding>
@@ -131,7 +131,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <RadioButton GroupName="ClientTabs" Style="{StaticResource MaterialDesignTabRadioButton}" Content="{Binding ReleaseChannelName, Mode=OneWay}" Checked="ClientTabCheckedHandler">
+                        <RadioButton GroupName="ClientTabs" Style="{StaticResource MaterialDesignTabRadioButton}" Content="{Binding FlavorName, Mode=OneWay}" Checked="ClientTabCheckedHandler">
                             <RadioButton.IsChecked>
                                 <MultiBinding Mode="OneWay" Converter="{StaticResource EqualToEachOtherMultiValueConverter}">
                                     <Binding Mode="OneWay" />

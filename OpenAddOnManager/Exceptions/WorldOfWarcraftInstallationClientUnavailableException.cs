@@ -4,10 +4,10 @@ namespace OpenAddOnManager.Exceptions
 {
     public class WorldOfWarcraftInstallationClientUnavailableException : Exception
     {
-        public WorldOfWarcraftInstallationClientUnavailableException(string releaseChannelId) => ReleaseChannelId = releaseChannelId;
+        public WorldOfWarcraftInstallationClientUnavailableException(Flavor flavor) => Flavor = flavor;
 
-        public override string Message => $"There is no available World of Warcraft installation client for the \"{ReleaseChannelId}\" release channel";
+        public override string Message => $"There is no available World of Warcraft \"{Utilities.GetFlavorName(Flavor)}\" installation client";
 
-        public string ReleaseChannelId { get; }
+        public Flavor Flavor { get; }
     }
 }

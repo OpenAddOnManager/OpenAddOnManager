@@ -13,7 +13,7 @@ namespace OpenAddOnManager.Windows
         {
             showPrereleaseVersions = App.ShowPrereleaseVersions;
             AddOnManager = addOnManager;
-            SortedClients = addOnManager.WorldOfWarcraftInstallation.Clients.ActiveOrderBy(client => client.ReleaseChannelName);
+            SortedClients = addOnManager.WorldOfWarcraftInstallation.Clients.ActiveOrderBy(client => client.FlavorName);
             firstSortedClient = SortedClients.ActiveFirstOrDefault();
             firstSortedClient.PropertyChanged += FirstSortedClientPropertyChangedHandler;
             selectedClient = firstSortedClient.Value;

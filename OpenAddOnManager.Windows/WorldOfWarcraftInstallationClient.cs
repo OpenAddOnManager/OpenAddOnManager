@@ -22,6 +22,13 @@ namespace OpenAddOnManager.Windows
                 throw new WorldOfWarcraftInstallationClientExecutableNotFoundException();
             if (!Version.TryParse(FileVersionInfo.GetVersionInfo(Executible.FullName).FileVersion, out var clientExecutableVersion))
                 throw new WorldOfWarcraftInstallationClientExecutableVersionFormatException();
+            var flavorInfoFile = new FileInfo(Path.Combine(Directory.FullName, ".flavor.info"));
+            if (!flavorInfoFile.Exists)
+                throw new WorldOfWarcraftInstallationClientFlavorInfoNotFoundException();
+            var flavorInfo = File.ReadAllLines(flavorInfoFile.FullName);
+            if (flavorInfo.Length <= 1 || !Enum.TryParse<Flavor>(flavorInfo[1], out var flavor))
+                throw new WorldOfWarcraftInstallationClientFlavorInfoNotFoundException();
+            Flavor = flavor;
         }
 
         protected override void Dispose(bool disposing)
@@ -34,8 +41,8 @@ namespace OpenAddOnManager.Windows
 
         public IWorldOfWarcraftInstallation Installation { get; private set; }
 
-        public string ReleaseChannelId => Directory.Name;
+        public Flavor Flavor { get; }
 
-        public string ReleaseChannelName => Utilities.GetReleaseChannelNameFromId(ReleaseChannelId);
+        public string FlavorName => Utilities.GetFlavorName(Flavor);
     }
 }

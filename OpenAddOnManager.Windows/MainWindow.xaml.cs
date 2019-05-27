@@ -64,7 +64,7 @@ namespace OpenAddOnManager.Windows
             (
                 addOn
                 =>
-                addOn.ReleaseChannelId == worldOfWarcraftInstallationClient.ReleaseChannelId
+                addOn.Flavor == worldOfWarcraftInstallationClient.Flavor
                 &&
                 (
                     addOn.IsInstalled
