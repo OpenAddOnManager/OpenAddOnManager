@@ -174,10 +174,11 @@ namespace OpenAddOnManager.Windows
         public App()
         {
             singleInstance = new SingleInstance("openaddonmanager", SecondaryInstanceMessageReceivedHandler);
-            Notifier = new Notifier(ConfigureNotifier);
+            notifier = new Notifier(ConfigureNotifier);
         }
 
         Version availableVersion;
+        readonly Notifier notifier;
         readonly SingleInstance singleInstance;
         FileInfo stateFile;
         bool themeIsDark;
@@ -186,6 +187,26 @@ namespace OpenAddOnManager.Windows
 
         public event PropertyChangedEventHandler PropertyChanged;
         public event PropertyChangingEventHandler PropertyChanging;
+
+        void AddOnManagerAddOnUpdateAvailableHandler(object sender, AddOnEventArgs e)
+        {
+            var addOn = e.AddOn;
+            notifier.Notify(() => new AddOnMessage($"update available {addOn.Key}")
+            {
+                AddOn = addOn,
+                MessageType = AddOnMessageType.UpdateAvailable
+            });
+        }
+
+        void AddOnManagerAddOnAutomaticallyUpdatedHandler(object sender, AddOnEventArgs e)
+        {
+            var addOn = e.AddOn;
+            notifier.Notify(() => new AddOnMessage($"updated {addOn.Key}")
+            {
+                AddOn = addOn,
+                MessageType = AddOnMessageType.UpdateInstalled
+            });
+        }
 
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs e) => PropertyChanged?.Invoke(this, e);
 
@@ -207,8 +228,10 @@ namespace OpenAddOnManager.Windows
 
             worldOfWarcraftInstallation = new WorldOfWarcraftInstallation(synchronizationContext: synchronizationContext);
             addOnManager = new AddOnManager(await Utilities.GetCommonStorageDirectoryAsync().ConfigureAwait(false), worldOfWarcraftInstallation, synchronizationContext);
-            stateFile = new FileInfo(Path.Combine(addOnManager.StorageDirectory.FullName, "appState.json"));
+            addOnManager.AddOnAutomaticallyUpdated += AddOnManagerAddOnAutomaticallyUpdatedHandler;
+            addOnManager.AddOnUpdateAvailable += AddOnManagerAddOnUpdateAvailableHandler;
 
+            stateFile = new FileInfo(Path.Combine(addOnManager.StorageDirectory.FullName, "appState.json"));
             if (stateFile.Exists)
             {
                 var appState = JsonConvert.DeserializeObject<AppState>(await File.ReadAllTextAsync(stateFile.FullName).ConfigureAwait(false));
@@ -227,13 +250,14 @@ namespace OpenAddOnManager.Windows
 
         protected override void OnExit(ExitEventArgs e)
         {
-            Notifier.Dispose();
+            notifier.Dispose();
             singleInstance.Dispose();
         }
 
         void ConfigureNotifier(NotifierConfiguration cfg)
         {
             cfg.Dispatcher = Dispatcher;
+            cfg.DisplayOptions.Width = 400;
             cfg.DisplayOptions.TopMost = true;
             cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(TimeSpan.FromSeconds(10), MaximumNotificationCount.FromCount(5));
             cfg.PositionProvider = new GdiPrimaryScreenPositionProvider(Corner.BottomRight, 0, 0);
@@ -260,6 +284,8 @@ namespace OpenAddOnManager.Windows
 
         public void Terminate() => ThreadPool.QueueUserWorkItem(async state =>
         {
+            addOnManager.AddOnAutomaticallyUpdated -= AddOnManagerAddOnAutomaticallyUpdatedHandler;
+            addOnManager.AddOnUpdateAvailable -= AddOnManagerAddOnUpdateAvailableHandler;
             addOnManager?.Dispose();
             worldOfWarcraftInstallation?.Dispose();
 
@@ -327,8 +353,6 @@ namespace OpenAddOnManager.Windows
             get => availableVersion;
             private set => SetBackedProperty(ref availableVersion, in value);
         }
-
-        public Notifier Notifier { get; }
 
         public bool RunAtStartup
         {

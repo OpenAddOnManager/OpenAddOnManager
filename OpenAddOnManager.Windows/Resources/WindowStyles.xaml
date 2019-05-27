@@ -9,4 +9,12 @@
         <Setter Property="TextElement.FontSize" Value="14" />
     </Style>
     <Style TargetType="{x:Type oamw:MainWindow}" BasedOn="{StaticResource WindowStyle}" />
+    
+    <Style x:Key="NotificationStyle" TargetType="{x:Type UserControl}">
+        <Setter Property="FontFamily" Value="{DynamicResource MaterialDesignFont}" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource MaterialDesignBody}" />
+        <Setter Property="TextElement.FontWeight" Value="Medium" />
+        <Setter Property="TextElement.FontSize" Value="14" />
+    </Style>
+    <Style TargetType="{x:Type oamw:AddOnDisplayPart}" BasedOn="{StaticResource NotificationStyle}" />
 </ResourceDictionary>

@@ -12,5 +12,7 @@ namespace OpenAddOnManager
         public TimeSpan ManifestsCheckFrequency { get; set; }
 
         public List<Uri> ManifestUrls { get; set; }
+
+        public bool NotifyOnAutomaticActions { get; set; }
     }
 }

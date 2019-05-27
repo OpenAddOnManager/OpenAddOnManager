@@ -94,8 +94,12 @@ namespace OpenAddOnManager
         DateTimeOffset lastUpdatesCheck;
         TimeSpan manifestsCheckFrequency = TimeSpan.FromDays(1);
         readonly Timer manifestsCheckTimer;
+        bool notifyOnAutomaticActions = true;
         readonly AsyncLock saveStateAccess = new AsyncLock();
         readonly FileInfo stateFile;
+
+        public event EventHandler<AddOnEventArgs> AddOnAutomaticallyUpdated;
+        public event EventHandler<AddOnEventArgs> AddOnUpdateAvailable;
 
         void AddOnsWithUpdateAvailablePropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -140,6 +144,7 @@ namespace OpenAddOnManager
                             manifestsCheckFrequency = addOnManagerState.ManifestsCheckFrequency;
                         ManifestUrls.Reset(addOnManagerState.ManifestUrls);
                         ManifestUrls.GenericCollectionChanged += ManifestUrlsGenericCollectionChangedHandler;
+                        notifyOnAutomaticActions = addOnManagerState.NotifyOnAutomaticActions;
                     }
                 }
                 if (AddOnsDirectory != null)
@@ -168,9 +173,9 @@ namespace OpenAddOnManager
         {
             try
             {
-                await UpdateAvailableAddOnsAsync().ConfigureAwait(false);
+                await UpdateAvailableAddOnsInternalAsync(true).ConfigureAwait(false);
                 if (automaticallyUpdateAddOns && addOnsWithUpdateAvailable.Value > 0)
-                    await UpdateAllAddOns().ConfigureAwait(false);
+                    await UpdateAllAddOnsInternalAsync(true).ConfigureAwait(false);
             }
             finally
             {
@@ -179,6 +184,10 @@ namespace OpenAddOnManager
         }
 
         void ManifestUrlsGenericCollectionChangedHandler(object sender, INotifyGenericCollectionChangedEventArgs<Uri> e) => SaveState();
+
+        protected virtual void OnAddOnAutomaticallyUpdated(AddOnEventArgs e) => AddOnAutomaticallyUpdated?.Invoke(this, e);
+
+        protected virtual void OnAddOnUpdateAvailable(AddOnEventArgs e) => AddOnUpdateAvailable?.Invoke(this, e);
 
         void SaveState() => ThreadPool.QueueUserWorkItem(async state => await SaveStateAsync());
 
@@ -193,7 +202,8 @@ namespace OpenAddOnManager
                         AutomaticallyUpdateAddOns = automaticallyUpdateAddOns,
                         LastUpdatesCheck = lastUpdatesCheck,
                         ManifestsCheckFrequency = manifestsCheckFrequency,
-                        ManifestUrls = (await ManifestUrls.GetAllAsync().ConfigureAwait(false)).ToList()
+                        ManifestUrls = (await ManifestUrls.GetAllAsync().ConfigureAwait(false)).ToList(),
+                        NotifyOnAutomaticActions = notifyOnAutomaticActions
                     });
         }
 
@@ -205,7 +215,9 @@ namespace OpenAddOnManager
             manifestsCheckTimer.Change(nextCheckIn, never);
         }
 
-        public Task UpdateAllAddOns() => Task.Run(async () =>
+        public Task UpdateAllAddOnsAsync() => UpdateAllAddOnsInternalAsync(false);
+
+        Task UpdateAllAddOnsInternalAsync(bool runAutomatically) => Task.Run(async () =>
         {
             ActionState = AddOnManagerActionState.UpdatingAllAddOns;
             try
@@ -215,7 +227,12 @@ namespace OpenAddOnManager
                 {
                     var (addOnRetrieved, addOn) = await addOns.TryGetValueAsync(addOnKey).ConfigureAwait(false);
                     if (addOnRetrieved && addOn.IsUpdateAvailable)
-                        updatingTasks.Add(addOn.InstallAsync());
+                        updatingTasks.Add(Task.Run(async () =>
+                        {
+                            await addOn.InstallAsync().ConfigureAwait(false);
+                            if (runAutomatically && notifyOnAutomaticActions)
+                                OnAddOnAutomaticallyUpdated(new AddOnEventArgs(addOn));
+                        }));
                 }
                 await Task.WhenAll(updatingTasks).ConfigureAwait(false);
             }
@@ -225,7 +242,9 @@ namespace OpenAddOnManager
             }
         });
 
-        public Task UpdateAvailableAddOnsAsync() => Task.Run(async () =>
+        public Task UpdateAvailableAddOnsAsync() => UpdateAvailableAddOnsInternalAsync(false);
+
+        Task UpdateAvailableAddOnsInternalAsync(bool runAutomatically) => Task.Run(async () =>
         {
             ActionState = AddOnManagerActionState.CheckingForAddOnUpdates;
             try
@@ -253,7 +272,11 @@ namespace OpenAddOnManager
                                     var entry = jsonSerializer.Deserialize<AddOnManifestEntry>(responseJsonTextReader);
                                     addOnKeysInManifests.Add(addOnKey);
                                     if (addOns.TryGetValue(addOnKey, out var addOn))
+                                    {
                                         await addOn.UpdatePropertiesFromManifestEntryAsync(entry).ConfigureAwait(false);
+                                        if (runAutomatically && notifyOnAutomaticActions && !automaticallyUpdateAddOns && addOn.IsUpdateAvailable)
+                                            OnAddOnUpdateAvailable(new AddOnEventArgs(addOn));
+                                    }
                                     else
                                         addOns.Add(addOnKey, new AddOn(this, addOnKey, entry));
                                 }
@@ -337,6 +360,16 @@ namespace OpenAddOnManager
         }
 
         public SynchronizedRangeObservableCollection<Uri> ManifestUrls { get; }
+
+        public bool NotifyOnAutomaticActions
+        {
+            get => notifyOnAutomaticActions;
+            set
+            {
+                if (SetBackedProperty(ref notifyOnAutomaticActions, in value))
+                    SaveState();
+            }
+        }
 
         public DirectoryInfo StorageDirectory { get; }
 

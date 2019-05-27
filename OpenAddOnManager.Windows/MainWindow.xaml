@@ -83,6 +83,8 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="8" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <TextBlock Grid.ColumnSpan="3" Style="{StaticResource MaterialDesignTitleTextBlock}">APPEARANCE</TextBlock>
                         <ToggleButton Grid.Row="2" VerticalAlignment="Center" IsChecked="{Binding Source={x:Static Application.Current}, Path=ThemeIsDark, Mode=TwoWay}" />
@@ -113,6 +115,8 @@
                         </StackPanel>
                         <ToggleButton Grid.Row="22" VerticalAlignment="Center" IsChecked="{Binding Source={x:Static Application.Current}, Path=RunAtStartup, Mode=TwoWay}" />
                         <TextBlock Grid.Row="22" Grid.Column="2">Start with Windows</TextBlock>
+                        <ToggleButton Grid.Row="24" VerticalAlignment="Center" IsChecked="{Binding AddOnManager.NotifyOnAutomaticActions, Mode=TwoWay}" />
+                        <TextBlock Grid.Row="24" Grid.Column="2">Notify Me of Automatic Actions</TextBlock>
                     </Grid>
                 </md:PopupBox>
             </md:Badged>

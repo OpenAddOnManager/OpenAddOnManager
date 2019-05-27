@@ -1,0 +1,37 @@
+<tnc:NotificationDisplayPart x:Class="OpenAddOnManager.Windows.AddOnDisplayPart"
+                             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                             xmlns:tnc="clr-namespace:ToastNotifications.Core;assembly=ToastNotifications"
+                             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+                             xmlns:oamw="clr-namespace:OpenAddOnManager.Windows"
+                             mc:Ignorable="d"
+                             d:DesignWidth="400">
+    <Grid>
+        <md:Card Margin="8" Background="{DynamicResource MaterialDesignPaper}" md:ShadowAssist.ShadowDepth="Depth3">
+            <Grid MinHeight="96">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="96" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Image Source="{Binding AddOn.IconUrl, Mode=OneWay}" Stretch="UniformToFill" StretchDirection="Both" />
+                <md:PackIcon Margin="4" Width="48" Height="48" Kind="Update" Foreground="{DynamicResource PrimaryHueMidBrush}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Visibility="{Binding MessageType, Mode=OneWay, Converter={StaticResource EqualToIsVisibleValueConverter}, ConverterParameter={x:Static oamw:AddOnMessageType.UpdateAvailable}}" />
+                <GroupBox Grid.Column="1" Style="{DynamicResource MaterialDesignGroupBox}" BorderThickness="0" Header="Add-On Update Available" Visibility="{Binding MessageType, Mode=OneWay, Converter={StaticResource EqualToIsVisibleValueConverter}, ConverterParameter={x:Static oamw:AddOnMessageType.UpdateAvailable}}">
+                    <TextBlock Foreground="{DynamicResource MaterialDesignBody}" TextWrapping="Wrap">
+                    <Run Text="{Binding AddOn.Name, Mode=OneWay}" /> has updates waiting for you to install!
+                    </TextBlock>
+                </GroupBox>
+                <md:PackIcon Margin="4" Width="48" Height="48" Kind="CheckBold" Foreground="{DynamicResource PrimaryHueMidBrush}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Visibility="{Binding MessageType, Mode=OneWay, Converter={StaticResource EqualToIsVisibleValueConverter}, ConverterParameter={x:Static oamw:AddOnMessageType.UpdateInstalled}}" />
+                <GroupBox Grid.Column="1" Style="{DynamicResource MaterialDesignGroupBox}" BorderThickness="0" Header="Add-On Updated" Visibility="{Binding MessageType, Mode=OneWay, Converter={StaticResource EqualToIsVisibleValueConverter}, ConverterParameter={x:Static oamw:AddOnMessageType.UpdateInstalled}}">
+                    <TextBlock Foreground="{DynamicResource MaterialDesignBody}" TextWrapping="Wrap">
+                        <Run Text="{Binding AddOn.Name, Mode=OneWay}" /> is all ready to go!
+                    </TextBlock>
+                </GroupBox>
+            </Grid>
+        </md:Card>
+        <Button x:Name="closeButton" Margin="0,5,12,0" Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" HorizontalAlignment="Right" VerticalAlignment="Top" Click="CloseClickHandler" Visibility="Hidden">
+            <md:PackIcon Kind="Close" Width="24" Height="24" />
+        </Button>
+    </Grid>
+</tnc:NotificationDisplayPart>

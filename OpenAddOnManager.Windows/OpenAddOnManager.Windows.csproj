@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="AddOnDisplayPart.xaml" />
     <None Remove="InstalledDogEar.xaml" />
     <None Remove="ManifestsDialog.xaml" />
     <None Remove="PrereleaseVersionDogEar.xaml" />

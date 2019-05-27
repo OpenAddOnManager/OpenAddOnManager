@@ -162,7 +162,7 @@ namespace OpenAddOnManager.Windows
             var addOnManager = Context.AddOnManager;
             if (addOnManager.ActionState != AddOnManagerActionState.Idle)
                 return;
-            await addOnManager.UpdateAllAddOns();
+            await addOnManager.UpdateAllAddOnsAsync();
         }
 
         async void UpdateClickHandler(object sender, RoutedEventArgs e)
