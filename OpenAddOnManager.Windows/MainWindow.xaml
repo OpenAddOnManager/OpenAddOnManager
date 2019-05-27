@@ -40,7 +40,7 @@
         <Border Grid.RowSpan="3" Grid.ColumnSpan="2" Background="{DynamicResource MaterialDesignBackground}" Opacity="0.5" />
         <StackPanel Margin="8,8,0,0" VerticalAlignment="Center" Orientation="Horizontal">
             <md:PackIcon VerticalAlignment="Center" Kind="Search" Width="24" Height="24" />
-            <TextBox Width="200" VerticalAlignment="Center" md:HintAssist.Hint="Search for Add-Ons" Text="{Binding SearchFor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox VerticalAlignment="Center" md:HintAssist.Hint="Search for Add-Ons" Text="{Binding SearchFor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
         <StackPanel Grid.Column="1" Margin="0,8,8,0" VerticalAlignment="Center" Orientation="Horizontal">
             <Button Margin="0,0,8,0" Style="{StaticResource MaterialDesignFloatingActionMiniButton}" Click="CheckForAddOnUpdatesClickHandler" ToolTip="Refresh Listings and Check for Add-On Updates" md:ButtonProgressAssist.IsIndeterminate="True" md:ButtonProgressAssist.IsIndicatorVisible="{Binding AddOnManager.ActionState, Mode=OneWay, Converter={StaticResource EqualToValueConverter}, ConverterParameter={x:Static oam:AddOnManagerActionState.CheckingForAddOnUpdates}}">
