@@ -52,7 +52,7 @@
                 </Button>
             </md:Badged>
             <md:Badged VerticalAlignment="Center" Badge="{Binding Source={x:Static Application.Current}, Path=AvailableVersion, Mode=OneWay, Converter={StaticResource NewVersionIsRefreshIconValueConverter}}" BadgePlacementMode="Bottom" BadgeColorZoneMode="Accent">
-                <md:PopupBox StaysOpen="True" PlacementMode="BottomAndAlignRightEdges">
+                <md:PopupBox x:Name="menuPopupBox" StaysOpen="True" PlacementMode="BottomAndAlignRightEdges">
                     <Grid Margin="24,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -100,7 +100,7 @@
                         </StackPanel>
                         <ToggleButton Grid.Row="10" VerticalAlignment="Center" IsChecked="{Binding ShowPrereleaseVersions, Mode=TwoWay}" />
                         <TextBlock Grid.Row="10" Grid.Column="2">Show Prerelease Versions</TextBlock>
-                        <Button Grid.Row="12" Grid.ColumnSpan="3" HorizontalAlignment="Left" Style="{StaticResource MaterialDesignRaisedButton}">LISTING SOURCES</Button>
+                        <Button Grid.Row="12" Grid.ColumnSpan="3" HorizontalAlignment="Left" Style="{StaticResource MaterialDesignRaisedButton}" Click="ListingSourcesClickHandler">LISTING SOURCES</Button>
                         <TextBlock Grid.Row="14" Grid.ColumnSpan="3" Style="{StaticResource MaterialDesignTitleTextBlock}">UPDATES</TextBlock>
                         <ToggleButton Grid.Row="16" VerticalAlignment="Center" IsChecked="{Binding AddOnManager.AutomaticallyUpdateAddOns, Mode=TwoWay}" />
                         <TextBlock Grid.Row="16" Grid.Column="2">Automatically Update Add-Ons</TextBlock>

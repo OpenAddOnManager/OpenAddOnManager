@@ -115,9 +115,10 @@ namespace OpenAddOnManager
             }
         }
 
-        public Task<bool> DeleteAsync() => Task.Run(async () =>
+        public Task<bool> DeleteAsync(bool uninstall = true) => Task.Run(async () =>
         {
-            await UninstallAsync().ConfigureAwait(false);
+            if (uninstall)
+                await UninstallAsync().ConfigureAwait(false);
             ActionState = AddOnActionState.Deleting;
             try
             {

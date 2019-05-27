@@ -265,15 +265,20 @@ namespace OpenAddOnManager
                         }
                     }
                 });
-                await addOns.RemoveAllAsync((addOnKey, addOn) => !addOnKeysInManifests.Contains(addOnKey)).ConfigureAwait(false);
-                var downloadingTasks = new List<Task>();
+                var concurrentTasks = new List<Task>((await addOns.RemoveAllAsync((addOnKey, addOn) => !addOnKeysInManifests.Contains(addOnKey)).ConfigureAwait(false)).Select(removedAddOn => Task.Run(async () =>
+                {
+                    await removedAddOn.Value.DeleteAsync(false).ConfigureAwait(false);
+                    var addOnStateFile = new FileInfo(Path.Combine(AddOnsDirectory.FullName, $"{removedAddOn.Key:N}.json"));
+                    if (addOnStateFile.Exists)
+                        addOnStateFile.Delete();
+                })));
                 foreach (var addOnKey in await addOns.GetAllKeysAsync().ConfigureAwait(false))
                 {
                     var (addOnRetrieved, addOn) = await addOns.TryGetValueAsync(addOnKey).ConfigureAwait(false);
                     if (addOnRetrieved && addOn.IsDownloaded)
-                        downloadingTasks.Add(addOn.DownloadAsync());
+                        concurrentTasks.Add(addOn.DownloadAsync());
                 }
-                await Task.WhenAll(downloadingTasks).ConfigureAwait(false);
+                await Task.WhenAll(concurrentTasks).ConfigureAwait(false);
             }
             finally
             {

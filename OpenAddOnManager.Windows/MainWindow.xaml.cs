@@ -1,6 +1,7 @@
 using Gear.ActiveQuery;
 using MaterialDesignThemes.Wpf;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -12,7 +13,11 @@ namespace OpenAddOnManager.Windows
     {
         public MainWindow() => InitializeComponent();
 
-        void AppWebsiteClickHandler(object sender, RoutedEventArgs e) => App.OpenInBrowser(new Uri("https://github.com/OpenAddOnManager/OpenAddOnManager"));
+        void AppWebsiteClickHandler(object sender, RoutedEventArgs e)
+        {
+            menuPopupBox.IsPopupOpen = false;
+            App.OpenInBrowser(new Uri("https://github.com/OpenAddOnManager/OpenAddOnManager"));
+        }
 
         async void CheckForAddOnUpdatesClickHandler(object sender, RoutedEventArgs e)
         {
@@ -43,7 +48,11 @@ namespace OpenAddOnManager.Windows
 
         void DonateClickHandler(object sender, RoutedEventArgs e) => App.OpenInBrowser(((AddOn)((Button)sender).DataContext).DonationsUrl);
 
-        void DownloadAppUpdateClickHandler(object sender, RoutedEventArgs e) => App.OpenInBrowser(new Uri("https://github.com/OpenAddOnManager/OpenAddOnManager/releases"));
+        void DownloadAppUpdateClickHandler(object sender, RoutedEventArgs e)
+        {
+            menuPopupBox.IsPopupOpen = false;
+            App.OpenInBrowser(new Uri("https://github.com/OpenAddOnManager/OpenAddOnManager/releases"));
+        }
 
         void EmailAddOnAuthorClickHandler(object sender, RoutedEventArgs e) => App.ComposeEmail(((AddOn)((Button)sender).DataContext).AuthorEmail);
 
@@ -85,10 +94,35 @@ namespace OpenAddOnManager.Windows
             if (addOn.ActionState != AddOnActionState.Idle)
                 return;
             await addOn.DownloadAsync();
-            if (addOn.IsLicensed && !addOn.IsLicenseAgreed && (bool)await DialogHost.Show(new AddOnLicenseDialog { DataContext = addOn }))
+            if (addOn.IsLicensed && !addOn.IsLicenseAgreed)
+            {
+                if (!(bool)await DialogHost.Show(new AddOnLicenseDialog { DataContext = addOn }))
+                {
+                    await addOn.DeleteAsync();
+                    return;
+                }
                 addOn.AgreeToLicense();
+            }
             if (!addOn.IsLicensed || addOn.IsLicenseAgreed)
                 await addOn.InstallAsync();
+        }
+
+        async void ListingSourcesClickHandler(object sender, RoutedEventArgs e)
+        {
+            menuPopupBox.IsPopupOpen = false;
+            var addOnManager = Context.AddOnManager;
+            var context = new ManifestsDialogContext(addOnManager.ManifestUrls);
+            if (await DialogHost.Show(new ManifestsDialog { DataContext = context }) is bool dialogResult && dialogResult)
+            {
+                var newManifestUrls = context.ManifestUrls.Distinct(StringComparer.OrdinalIgnoreCase).Select(manifestUrl => Uri.TryCreate(manifestUrl, UriKind.Absolute, out var manifestUri) ? manifestUri : null).Where(manifestUri => manifestUri != null);
+                ThreadPool.QueueUserWorkItem(async state =>
+                {
+                    while (addOnManager.ActionState != AddOnManagerActionState.Idle)
+                        await Task.Delay(250);
+                    await addOnManager.ManifestUrls.ReplaceAllAsync(newManifestUrls);
+                    await addOnManager.UpdateAvailableAddOnsAsync();
+                });
+            }
         }
 
         void LoadedHandler(object sender, RoutedEventArgs e) => App.SafeguardWindowPosition(this);
