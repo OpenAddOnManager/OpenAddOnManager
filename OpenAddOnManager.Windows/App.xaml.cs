@@ -333,6 +333,9 @@ namespace OpenAddOnManager.Windows
         {
             switch (message)
             {
+                case "quit":
+                    Terminate();
+                    break;
                 case "showmainwindow":
                     await ShowMainWindowAsync();
                     break;
