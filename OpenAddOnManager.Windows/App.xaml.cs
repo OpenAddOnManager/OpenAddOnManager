@@ -3,6 +3,7 @@ using MaterialDesignColors;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 using Newtonsoft.Json;
+using OpenAddOnManager.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -226,7 +227,16 @@ namespace OpenAddOnManager.Windows
 
             updateAvailableVersion = new Timer(UpdateAvailableVersion, null, TimeSpan.Zero, TimeSpan.FromDays(1));
 
-            worldOfWarcraftInstallation = new WorldOfWarcraftInstallation(synchronizationContext: synchronizationContext);
+            try
+            {
+                worldOfWarcraftInstallation = new WorldOfWarcraftInstallation(synchronizationContext: synchronizationContext);
+            }
+            catch (WorldOfWarcraftInstallationUnavailableException)
+            {
+                await OnUiThreadAsync(() => MessageBox.Show("Dude and/or madame, you have World of Warcraft installed in an odd place or not at all. I can't manage add-ons for WoW without WoW!", "NOOOOOOOOPE", MessageBoxButton.OK, MessageBoxImage.Error)).ConfigureAwait(false);
+                Environment.Exit(0);
+            }
+
             addOnManager = new AddOnManager(await Utilities.GetCommonStorageDirectoryAsync().ConfigureAwait(false), worldOfWarcraftInstallation, synchronizationContext);
             addOnManager.AddOnAutomaticallyUpdated += AddOnManagerAddOnAutomaticallyUpdatedHandler;
             addOnManager.AddOnUpdateAvailable += AddOnManagerAddOnUpdateAvailableHandler;
