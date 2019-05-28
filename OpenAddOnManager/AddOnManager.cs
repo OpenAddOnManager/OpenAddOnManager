@@ -272,11 +272,7 @@ namespace OpenAddOnManager
                                     var entry = jsonSerializer.Deserialize<AddOnManifestEntry>(responseJsonTextReader);
                                     addOnKeysInManifests.Add(addOnKey);
                                     if (addOns.TryGetValue(addOnKey, out var addOn))
-                                    {
                                         await addOn.UpdatePropertiesFromManifestEntryAsync(entry).ConfigureAwait(false);
-                                        if (runAutomatically && notifyOnAutomaticActions && !automaticallyUpdateAddOns && addOn.IsUpdateAvailable)
-                                            OnAddOnUpdateAvailable(new AddOnEventArgs(addOn));
-                                    }
                                     else
                                         addOns.Add(addOnKey, new AddOn(this, addOnKey, entry));
                                 }
@@ -299,7 +295,11 @@ namespace OpenAddOnManager
                 {
                     var (addOnRetrieved, addOn) = await addOns.TryGetValueAsync(addOnKey).ConfigureAwait(false);
                     if (addOnRetrieved && addOn.IsDownloaded)
-                        concurrentTasks.Add(addOn.DownloadAsync());
+                        concurrentTasks.Add(Task.Run(async () =>
+                        {
+                            if (await addOn.DownloadAsync().ConfigureAwait(false) && runAutomatically && notifyOnAutomaticActions && !automaticallyUpdateAddOns)
+                                OnAddOnUpdateAvailable(new AddOnEventArgs(addOn));
+                        }));
                 }
                 await Task.WhenAll(concurrentTasks).ConfigureAwait(false);
             }
