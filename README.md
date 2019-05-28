@@ -86,7 +86,7 @@ Here's an example that uses every property, with comments detailing what they do
         // if not present, OAM assumes 'wow' (retail)
         "flavor": "wow",
 
-        // a URL pointing to a JPEG, GIF, or PNG to server as your add-on's icon
+        // a URL pointing to a JPEG, GIF, or PNG to serve as your add-on's icon
         "iconUrl": "https://raw.githubusercontent.com/SomeAddOnDeveloper/SomeCoolWoWAddOn/master/icon.png",
 
         // the URL of the Git repository to clone
