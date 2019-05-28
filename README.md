@@ -51,7 +51,7 @@ We don't know why we even bothered separating out the business logic into its ow
 ## How do I get my add-on listed in OAM?
 
 OAM knows what add-ons are available by periodically downloading [addOns.json](https://github.com/OpenAddOnManager/OpenAddOnManager/blob/master/addOns.json) from its own GitHub repo.
-If you would like your add-on to be available to players to install via OAM, fork this repo, add your repo to `addOns.json`, and then submit a PR.
+If you would like your add-on to be available to players to install via OAM, fork this repo, add entries for your add-on to `addOns.json`, and then submit a PR.
 Once we've established that it is, in fact, your add-on for which to control distribution, we will happily merge your PR and OAM users will have access to your add-on!
 
 ## How does OAM distribute add-ons?
