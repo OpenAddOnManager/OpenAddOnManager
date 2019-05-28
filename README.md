@@ -64,7 +64,7 @@ Otherwise, you may choose to create a Git repository specifically for distributi
 
 Here's an example that uses every property, with comments detailing what they do and what other options exist:
 
-```json
+```javascript
 {
     // ... other add-ons above this listing ...
 
