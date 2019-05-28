@@ -96,7 +96,7 @@ Here's an example that uses every property, with comments detailing what they do
         // if not present, OAM uses the remote's base branch
         "sourceBranch": "master",
 
-        // whether or not this entry is for pre-release version of the add-on
+        // whether or not this entry is for a pre-release version of the add-on
         // let adventurous fans get more frequent updates from your test branch!
         // if not present, OAM assumes false
         "isPrereleaseVersion": false,
