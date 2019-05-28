@@ -20,12 +20,6 @@ namespace OpenAddOnManager.Windows
 
         protected override AddOnDisplayPart CreateDisplayPart() => new AddOnDisplayPart(this, Options);
 
-        protected override void UpdateDisplayOptions(AddOnDisplayPart displayPart, MessageOptions options)
-        {
-            //if (options.FontSize != null)
-            //    displayPart.Text.FontSize = options.FontSize.Value;
-
-            displayPart.closeButton.Visibility = options.ShowCloseButton ? Visibility.Visible : Visibility.Collapsed;
-        }
+        protected override void UpdateDisplayOptions(AddOnDisplayPart displayPart, MessageOptions options) => displayPart.closeButton.Visibility = options.ShowCloseButton ? Visibility.Visible : Visibility.Collapsed;
     }
 }

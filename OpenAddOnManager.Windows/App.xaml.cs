@@ -192,7 +192,7 @@ namespace OpenAddOnManager.Windows
         void AddOnManagerAddOnUpdateAvailableHandler(object sender, AddOnEventArgs e)
         {
             var addOn = e.AddOn;
-            notifier.Notify(() => new AddOnMessage($"update available {addOn.Key}")
+            notifier.Notify(() => new AddOnMessage($"update available {addOn.Key}", new MessageOptions { ShowCloseButton = false })
             {
                 AddOn = addOn,
                 MessageType = AddOnMessageType.UpdateAvailable
@@ -202,7 +202,7 @@ namespace OpenAddOnManager.Windows
         void AddOnManagerAddOnAutomaticallyUpdatedHandler(object sender, AddOnEventArgs e)
         {
             var addOn = e.AddOn;
-            notifier.Notify(() => new AddOnMessage($"updated {addOn.Key}")
+            notifier.Notify(() => new AddOnMessage($"updated {addOn.Key}", new MessageOptions { ShowCloseButton = false })
             {
                 AddOn = addOn,
                 MessageType = AddOnMessageType.UpdateInstalled
