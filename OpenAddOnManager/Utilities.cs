@@ -16,7 +16,7 @@ namespace OpenAddOnManager
 
         public static string GetFlavorName(Flavor flavor) => flavor switch
         {
-            Flavor.wow => "Release",
+            Flavor.wow => "Retail",
             Flavor.wowt => "PTR",
             Flavor.wow_classic_beta => "Classic Beta",
             _ => throw new NotSupportedException()
